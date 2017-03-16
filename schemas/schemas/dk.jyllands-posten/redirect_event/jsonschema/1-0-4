@@ -1,11 +1,11 @@
 {
     "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
-    "description": "Schema for a page view event",
+    "description": "Schema for a redirect event",
     "self": {
         "vendor": "dk.jyllands-posten.snowplow",
-        "name": "page_view",
+        "name": "redirect_event",
         "format": "jsonschema",
-        "version": "1-0-0"
+        "version": "1-0-4"
     },
     "type": "object",
     "properties": {
@@ -14,15 +14,13 @@
             "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
         },
         "redirectUrl": {
-            "type": "string",
-            "pattern": "[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+            "type": "string"
         },
         "site": {
             "type": "string"
         },
         "referrer": {
-            "type": "string",
-            "pattern": "[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+            "type": "string"
         }
     },
     "required": [
