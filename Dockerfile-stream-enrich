@@ -38,4 +38,4 @@ COPY ./stream-enrich/configuration/config /app/configuration/config
 COPY ./stream-enrich/configuration/resolver.json /app/configuration/resolver.json
 COPY ./stream-enrich/configuration/enrichments/ /app/configuration/enrichments/
 
-CMD java -jar  /app/snowplow-stream-enrich-0.10.0.jar --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
+CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/snowplow-stream-enrich-0.10.0.jar --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
