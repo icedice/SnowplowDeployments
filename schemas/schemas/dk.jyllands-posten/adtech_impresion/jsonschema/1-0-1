@@ -1,0 +1,65 @@
+{
+  "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+  "description": "Schema for an array of ad impression event",
+  "self": {
+    "vendor": "dk.jyllands-posten",
+    "name": "adtech_impression",
+    "format": "jsonschema",
+    "version": "1-0-1"
+  },
+  "type": "object",
+  "properties": {
+    "section_id":{
+      "type": "integer"
+    },
+    "content_id":{
+      "type": "integer"
+    },
+    "adblocker":{
+      "type": "boolean"
+    },
+    "placement": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "loaded": {
+            "type": "boolean"
+          },
+          "campaigninfo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "placement": {
+                  "type": "integer"
+                },
+                "campaign": {
+                  "type": "integer"
+                },
+                "creative": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "campaign",
+                "creative"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "loaded",
+          "campaigninfo"
+        ]
+      }
+    }
+  },
+  "required": [
+    "section_id","placement"
+  ]
+}
