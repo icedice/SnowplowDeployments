@@ -2,17 +2,15 @@ from datetime import datetime, timedelta
 import json
 import time
 
-import boto
-from boto import kinesis
-
+import boto3
 
 def get_kinesis_data_iterator(stream_name, iterator_type):
-    client = boto.kinesis.connect_to_region('eu-west-1')
-    kinesis_stream = client.describe_stream(stream_name)
+    client = boto3.client('kinesis')
+    kinesis_stream = client.describe_stream(StreamName=stream_name)
     shards = kinesis_stream['StreamDescription']['Shards']
     shard_ids = [shard['ShardId'] for shard in shards]
 
-    iter_responses = [client.get_shard_iterator(stream_name, shard_id, iterator_type) for shard_id in shard_ids]
+    iter_responses = [client.get_shard_iterator(StreamName=stream_name, ShardId=shard_id, ShardIteratorType=iterator_type) for shard_id in shard_ids]
     shard_iterators = [iter_response['ShardIterator'] for iter_response in iter_responses]
     
     last_sequences = [None for _ in shard_iterators]
@@ -20,7 +18,7 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
     while True:
         for i in range(len(shard_iterators)):
             try:
-                record_response = client.get_records(shard_iterators[i])
+                record_response = client.get_records(ShardIterator=shard_iterators[i])
                 
                 now = datetime.now()
                 print('Time: {0}'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
@@ -31,14 +29,14 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
 
                 # Get the next iterator for the current shard from the response.
                 shard_iterators[i] = record_response['NextShardIterator']
-            except boto.kinesis.exceptions.ProvisionedThroughputExceededException:
-                print('Calling Kinesis too often. Backing off...')
-                time.sleep(2)
-            except boto.kinesis.exceptions.ExpiredIteratorException:
-                # The iterator has expired. Get a new one based on the last sequence seen by the expired iterator.
-                iter_response = client.get_shard_iterator(stream_name, shard_ids[i], "AFTER_SEQUENCE_NUMBER", last_sequences[i])
-                shard_iterators[i] = iter_response['ShardIterator']
-
+            except ClientError as err:
+                backoffExceptions = ['ProvisionedThroughputExceededException', 'ThrottlingException']
+                if err.response['Error']['Code'] in backoffExceptions:
+                    print('Calling Kinesis too often. Backing off...')
+                    time.sleep(5)
+                else:
+                    raise err
+                    
             time.sleep(1)
 
     kinesis.close()
