@@ -1,0 +1,16 @@
+{
+    "id": "some_identifier",
+    "classes": [],
+    "tracking_labels": [],
+    "url": "#"
+},
+{
+    "id": "some_parent_id/div[2]/a[1]",
+    "classes": ["some-link-class", "blue"],
+    "tracking_labels": ["label1", "label2"],
+    "url": "http://google.com",
+    "additional_data": [
+        { "key": "key1", "value": "value1" },
+        { "key": "key2", "value": "value2" },
+    ]
+}

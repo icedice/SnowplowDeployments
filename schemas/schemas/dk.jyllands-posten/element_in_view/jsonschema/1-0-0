@@ -1,0 +1,64 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-1#",
+    "description": "Schema for an event signifying that a (DOM) element has come into view.",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "element_in_view",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "id": {
+            "description": "If the element does not have an id attribute, look up the DOM hierarchy and construct a path from the first parent with an id. For example: parents_parent_id/div[1]/a[1]. If no parent has an id, start with \"/body\" instead of an id: \"/body/div[1]/a[1]\". To avoid these paths just give each tracked element a unique id.",
+            "type": "string"
+        },
+        "tag_name": {
+            "type": "string"
+        },
+        "classes": {
+            "description": "The element's classes.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "tracking_labels": {
+            "description": "Parents' and the element itself's data-jp-track attributes.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "timestamp": {
+            "description": "The timestamp for when the element came into view. Formats defined in https://tools.ietf.org/html/rfc3339.",
+            "type": "string",
+            "format": "date-time"
+        },
+        "additional_data": {
+            "description": "Semi-structured key-value pairs used for tracking any additional data which does not fit in the other properties.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                  "key", "value"
+                ]
+            }
+        }
+    },
+    "required": [
+        "id",
+        "tag_name",
+        "classes",
+        "tracking_labels",
+        "timestamp"
+    ]
+}

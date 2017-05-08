@@ -1,0 +1,18 @@
+{
+    "id": "some_identifier",
+    "tag_name": "div",
+    "classes": [],
+    "tracking_labels": [],
+    "timestamp": "1985-04-12T23:20:50.52Z"
+},
+{
+    "id": "/body/div[2]/span[1]",
+    "tag_name": "span",
+    "classes": ["artHeading", "bordered"],
+    "tracking_labels": ["label1", "label2"],
+    "timestamp": "1985-04-12T23:20:50.52Z",
+    "additional_data": [
+        { "key": "key1", "value": "value1" },
+        { "key": "key2", "value": "value2" },
+    ]
+}
