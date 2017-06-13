@@ -2,7 +2,6 @@
 Takes an input stream and replicates a fraction of Snowplow records to an output stream, changing the records' app_id in the process.
 """
 import base64, json, boto3, sys, os
-from random import randint
 
 keep_one_in_X_events = 1000
 out_stream_name = os.environ["ENV_OUTPUT_STREAM_NAME"]
