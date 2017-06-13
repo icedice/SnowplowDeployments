@@ -29,10 +29,10 @@ def handler(event, context):
             new_payload = new_app_id + payload_excl_app_id
             records.push({"Data": bytes(new_payload, "UTF-8"), "PartitionKey": seq_number})
         except Exception as e:
-            print("ERROR: {}\nInput: {}".format(e.message, record["kinesis"]["data"]), file=sys.stderr)
+            print("ERROR: {}\nInput: {}".format(str(e), record["kinesis"]["data"]), file=sys.stderr)
 
     sts_client = boto3.client("sts")
-    sts_response = sts_client.assume_role(RoleArn=assume_role_arn, RoleSessionName=assume_role_session_name, DurationSeconds=5)
+    sts_response = sts_client.assume_role(RoleArn=assume_role_arn, RoleSessionName=assume_role_session_name, DurationSeconds=900)
 
     kinesis_client = boto3.client("kinesis",
         aws_access_key_id=sts_response["Credentials"]["AccessKeyId"],
