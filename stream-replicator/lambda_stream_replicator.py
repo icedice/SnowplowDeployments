@@ -7,9 +7,10 @@ from random import randint
 keep_one_in_X_events = 1000
 out_stream_name = os.environ["ENV_OUTPUT_STREAM_NAME"]
 
-def handler(event, context):
-    kinesis_client = boto3.client("kinesis")
+assume_role_arn = os.environ["ENV_ASSUME_ROLE_ARN"]
+assume_role_session_name = "snowplow-stream-replicator"
 
+def handler(event, context):
     records = []
     for record in event["Records"]:
         seq_number = record["kinesis"]["sequenceNumber"]
@@ -31,6 +32,13 @@ def handler(event, context):
         except Exception as e:
             print("ERROR: {}\nInput: {}".format(e.message, record["kinesis"]["data"]), file=sys.stderr)
 
-    
+    sts_client = boto3.client("sts")
+    sts_response = sts_client.assume_role(RoleArn=assume_role_arn, RoleSessionName=assume_role_session_name, DurationSeconds=5)
+
+    kinesis_client = boto3.client("kinesis",
+        aws_access_key_id=sts_response["Credentials"]["AccessKeyId"],
+        aws_secret_access_key=sts_response["Credentials"]["SecretAccessKey"],
+        aws_session_token=sts_response["Credentials"]["SessionToken"]
+    )    
     kinesis_client.put_records(Records=records, StreamName=out_stream_name)
     print("Put {}/{} events on stream {}.".format(len(records), len(event["Records"]), out_stream_name))
