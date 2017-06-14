@@ -3,7 +3,7 @@ Takes an input stream and replicates a fraction of Snowplow records to an output
 """
 import base64, json, boto3, sys, os
 
-keep_one_in_X_events = 1000
+keep_one_in_X_events = 100
 out_stream_name = os.environ["ENV_OUTPUT_STREAM_NAME"]
 
 assume_role_arn = os.environ["ENV_ASSUME_ROLE_ARN"]
@@ -31,6 +31,9 @@ def handler(event, context):
         except Exception as e:
             print("ERROR: {}\nInput: {}".format(str(e), record["kinesis"]["data"]), file=sys.stderr)
 
+    if len(records) == 0:
+        return
+        
     sts_client = boto3.client("sts")
     sts_response = sts_client.assume_role(RoleArn=assume_role_arn, RoleSessionName=assume_role_session_name, DurationSeconds=900)
 
