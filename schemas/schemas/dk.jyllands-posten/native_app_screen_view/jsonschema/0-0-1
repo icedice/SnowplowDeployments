@@ -5,26 +5,20 @@
         "vendor": "dk.jyllands-posten.snowplow",
         "name": "native_app_screen_view",
         "format": "jsonschema",
-        "version": "1-0-0"
+        "version": "0-0-1"
     },
     "type": "object",
     "properties": {
         "section_id": {
-            "description": "Escenic section id.",
-            "type": "integer"
+            "description": "Escenic section id or 0.",
+            "type": "integer",
+            "default": 0
         },
         "content_id": {
             "description": "Escenic content id (article id) or 0.",
             "type": "integer",
             "default": 0
-        },
-        "ref_id": {
-            "description": "Referrer ID if any or NOTSET.",
-            "type": "string",
-            "default": "NOTSET"
         }
     },
-    "required": [
-        "section_id"
-    ]
+    "required": [ ]
 }
