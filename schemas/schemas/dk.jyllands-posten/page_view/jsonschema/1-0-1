@@ -1,0 +1,61 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "description": "Schema for a page view event",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "page_view",
+        "format": "jsonschema",
+        "version": "1-0-1"
+    },
+    "type": "object",
+    "properties": {
+        "section_id": {
+            "type": "integer"
+        },
+        "section_name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "content_id": {
+            "type": "integer"
+        },
+        "content_type": {
+            "type": "string",
+            "minLength": 1
+        },
+       "page_name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "page_type": {
+            "enum": ["sec", "art", "fp", "signup", "myaccount", "NOTSET"]
+        },
+        "page_restricted": {
+            "enum": ["yes", "no"]
+        },
+        "site": {
+            "type": "string",
+            "minLength": 1
+        },
+        "sub_site": {
+            "type": "string",
+            "minLength": 1
+        },
+        "editorial_category": {
+            "type": "string",
+            "minLength": 1
+        }
+    },
+    "required": [
+        "section_id",
+        "section_name",
+        "content_id",
+        "content_type",
+        "page_name",
+        "page_type",
+        "page_restricted",
+        "site",
+        "sub_site",
+        "editorial_category"
+    ]
+}
