@@ -1,0 +1,23 @@
+{
+	"$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+	"description": "Schema for job ad impression",
+	"self": {
+		"vendor": "dk.jyllands-posten.snowplow",
+		"name": "jobAd_impression",
+		"format": "jsonschema",
+		"version": "1-0-4"
+	},
+	"type": "object",
+	"properties": {
+		"jobAdId": {
+			"type": "integer"
+		},
+		"userId": {
+        			"type": "integer"
+        		}
+	},
+	"required": [
+		"jobAdId",
+		"userId"
+	]
+}
