@@ -37,7 +37,7 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
                 else:
                     raise err
                     
-            time.sleep(1)
+        time.sleep(1)
 
     kinesis.close()
 
