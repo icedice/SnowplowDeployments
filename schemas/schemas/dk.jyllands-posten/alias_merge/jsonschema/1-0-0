@@ -1,0 +1,32 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "description": "Schema for an event signifying a merge of aliases in the Alias Service.",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "alias_merge",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "new_id": {
+            "description": "The new alias id to be used going forward. May be one of the ids in old_ids.",
+            "type": "string",
+            "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
+        },
+        "old_ids": {
+            "description": "The old alias ids which have been merged and should not be used anymore (except the one that is new_id, if any).",
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
+            },
+            "minItems": 2,
+            "uniqueItems": true
+        }
+    },
+    "required": [
+        "new_id",
+        "old_ids"
+    ]
+}
