@@ -1,3 +1,4 @@
 *.sublime-project
 *.sublime-workspace
 .temp_credentials
+.vscode/
