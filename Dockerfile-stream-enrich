@@ -1,9 +1,11 @@
 FROM scala-alpine
 MAINTAINER Klaus Hebsgaaard <klaus.hebsgaard@jp.dk>, Asger Bachmann <asger.g.bachmann@jp.dk>
 
-COPY  ./snowplow/3-enrich/stream-enrich/target/scala-2.10/snowplow-stream-enrich-0.10.0 /app/snowplow-stream-enrich-0.10.0.jar
+COPY  ./snowplow/3-enrich/stream-enrich/target/scala-2.11/snowplow-stream-enrich-0.12.0.jar /app/snowplow-stream-enrich-0.12.0.jar
 COPY ./stream-enrich/configuration/config /app/configuration/config
 COPY ./stream-enrich/configuration/resolver.json /app/configuration/resolver.json
 COPY ./stream-enrich/configuration/enrichments/ /app/configuration/enrichments/
 
-CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/snowplow-stream-enrich-0.10.0.jar --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
+# As per https://discourse.snowplowanalytics.com/t/error-in-running-scala-stream-collector/1643/3, the official way is
+# to run with disableCbor to avoid an error from the AWS SDK.
+CMD java -jar -Dcom.amazonaws.sdk.disableCbor -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/snowplow-stream-enrich-0.12.0.jar --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments

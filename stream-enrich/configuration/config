@@ -11,9 +11,6 @@
 # implied.  See the Apache License Version 2.0 for the specific language
 # governing permissions and limitations there under.
 
-# This file (application.conf.example) contains a template with
-# configuration options for Stream Enrich.
-
 enrich {
   # Sources currently supported are:
   # 'kinesis' for reading Thrift-serialized records from a Kinesis stream
@@ -37,60 +34,72 @@ enrich {
   #
   # If both are set to 'env', use environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
   aws {
-    access-key: "default"
-    secret-key: "default"
-  }
-
-  # Kafka configuration
-  kafka {
-    brokers: "{{enrichKafkaBrokers}}"
+    accessKey = "default"
+    secretKey = "default"
   }
 
   streams {
-    in: {
-      raw: ${kinesis_input_good}
-
-      # Maximum number of records to get from Kinesis per call to GetRecords
-      maxRecords: 10000
-
-      # After enrichment, are accumulated in a buffer before being sent to Kinesis.
-      # The buffer is emptied whenever:
-      # - the number of stored records reaches record-limit or
-      # - the combined size of the stored records reaches byte-limit or
-      # - the time in milliseconds since it was last emptied exceeds time-limit when
-      #   a new event enters the buffer
-      buffer: {
-        byte-limit: 1024
-        record-limit: 2
-        time-limit: 1000
-      }
+    in = {
+      raw = ${kinesis_input_good}
     }
 
-    out: {
-      enriched: ${kinesis_output_good}
-      bad: ${kinesis_output_bad}
+    out = {
+      enriched = ${kinesis_output_good}
+      bad = ${kinesis_output_bad}
+
+      partitionKey = "domain_userid"
+    }
+
+    kinesis {
+      region = "eu-west-1"
+
+      # Maximum number of records to get from Kinesis per call to GetRecords
+      maxRecords = 10000
 
       # Minimum and maximum backoff periods
-      # - Units: Milliseconds
-      backoffPolicy: {
-        minBackoff: 100
-        maxBackoff: 2000
+      # - Units = Milliseconds
+      backoffPolicy = {
+        minBackoff = 100
+        maxBackoff = 2000
       }
+
+      # LATEST: most recent data.
+      # TRIM_HORIZON: oldest available data.
+      # Note: This only effects the first run of this application
+      # on a stream.
+      initialPosition = "TRIM_HORIZON"
+    }
+
+    # Unused but required by the configuration parser.
+    kafka {
+      brokers = ""
+      retries = 0
+    }
+
+    # Unused but required by the configuration parser.
+    nsq {
+      rawChannel = ""
+      host = ""
+      port = 0
+      lookupHost = ""
+      lookupPort = 0
+    }
+
+    # After enrichment, are accumulated in a buffer before being sent to Kinesis.
+    # The buffer is emptied whenever:
+    # - the number of stored records reaches record-limit or
+    # - the combined size of the stored records reaches byte-limit or
+    # - the time in milliseconds since it was last emptied exceeds time-limit when
+    #   a new event enters the buffer
+    buffer = {
+      byteLimit = 4096
+      recordLimit = 5
+      timeLimit = 1000
     }
 
     # "app-name" is used for a DynamoDB table to maintain stream state.
     # "app-name" is used as the Kafka consumer group ID.
     # You can set it automatically using: "SnowplowKinesisEnrich-$\\{enrich.streams.in.raw\\}"
-    app-name: ${app_name}
-
-    # LATEST: most recent data.
-    # TRIM_HORIZON: oldest available data.
-    # Note: This only effects the first run of this application
-    # on a stream.
-    initial-position = "TRIM_HORIZON"
-
-    region: "eu-west-1"
+    appName = ${app_name}
   }
-
-# Optional section for tracking endpoints
 }

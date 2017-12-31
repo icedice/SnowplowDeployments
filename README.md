@@ -9,11 +9,9 @@ Assuming Oracle JDK 1.7 is in _/opt/jdk1.7.0_80_ and _sbt-extras_ is in PATH. No
 git submodule update --init --recursive
 
 # Use subshells to avoid changing this shell's working directory.
-(cd snowplow/2-collectors/scala-stream-collector;
-sbt -java-home /opt/jdk1.7.0_80 assembly)
+(cd snowplow/2-collectors/scala-stream-collector; sbt assembly)
 
-(cd snowplow/3-enrich/stream-enrich;
-sbt -java-home /opt/jdk1.7.0_80 assembly)
+(cd snowplow/3-enrich/stream-enrich; sbt assembly)
 
 docker build -f Dockerfile-scala-alpine -t scala-alpine .
 docker build -f Dockerfile-scala-collector -t scala-collector .
@@ -25,6 +23,12 @@ Assuming your AWS access key is in AWS\_ACCESS\_KEY\_ID and the secret access ke
 ```bash
 docker run --rm -it -p 9090:9090 -e is_production=false -e kinesisStreamGoodName=Dev-web_good -e kinesisStreamBadName=Dev-web_bad -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY scala-collector
 docker run --rm -it -e kinesis_input_good=Dev-web_good -e kinesis_output_good=Dev-enriched_good -e kinesis_output_bad=Dev-enriched_bad -e app_name=SnowplowKinesisEnrich_local -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY stream-enrich
+```
+
+If using the `with_aws_env` script, run as
+```bash
+with_aws_env docker run --rm -it -p 9090:9090 -e is_production=false -e kinesisStreamGoodName=Dev-web_good -e kinesisStreamBadName=Dev-web_bad -e AWS_ACCESS_KEY_ID='$AWS_ACCESS_KEY_ID' -e AWS_SECRET_ACCESS_KEY='$AWS_SECRET_ACCESS_KEY' -e AWS_SESSION_TOKEN='$AWS_SESSION_TOKEN' scala-collector
+with_aws_env docker run --rm -it -e kinesis_input_good=Dev-web_good -e kinesis_output_good=Dev-enriched_good -e kinesis_output_bad=Dev-enriched_bad -e app_name=SnowplowKinesisEnrich_local -e AWS_ACCESS_KEY_ID='$AWS_ACCESS_KEY_ID' -e AWS_SECRET_ACCESS_KEY='$AWS_SECRET_ACCESS_KEY' -e AWS_SESSION_TOKEN='$AWS_SESSION_TOKEN' stream-enrich
 ```
 
 # Longer version
@@ -47,6 +51,19 @@ scala-alpine is the base image for the following images. It is based on Alpine L
 The iglu repo can be added to S3 and exposed as a website. Configure _stream-enrich/configuration/resolver.json_ with the relevant URL.
 
 # Tips and tricks
-_sbt-extras_ (https://github.com/paulp/sbt-extras/) allows you to specify JAVA\_HOME on the command line (so you can compile the Snowplow components using JDK 1.7). For example: `sbt -java-home /opt/jdk1.7.0_80 assembly`
-
 _.dockerignore_ is set up to ignore a lot of files to make the Docker build context smaller. If you need to COPY a file or folder in a Dockerfile and it cannot find the given path, check that it is not ignored in _.dockerignore_.
+
+## Updating Snowplow version
+In the *snowplow* directory, do a `git checkout` of a commit, branch or tag. The submodule itself will not have any changes if you run `git status`, however this repository will have changes to commit and push resulting in an update of the submodule in the remote as well.
+
+After checking out the relevant commit, branch or tag, recursively update the submodule to pull changes from the submodule's submodules.
+
+For example, to update to R89 using the r89-plain-of-jars tag and commit the changes, run
+```bash
+cd snowplow
+git checkout r89-plain-of-jars
+cd ..
+git submodule update --init --recursive
+git add .
+gc -m "Update Snowplow to R89."
+```

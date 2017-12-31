@@ -11,11 +11,6 @@
 # implied.  See the Apache License Version 2.0 for the specific language
 # governing permissions and limitations there under.
 
-# This file (application.conf.example) contains a template with
-# configuration options for the Scala Stream Collector.
-#
-# To use, copy this to 'application.conf' and modify the configuration options.
-
 # 'collector' contains configuration options for the main Scala collector.
 collector {
   # The collector runs as a web service specified on the following
@@ -30,7 +25,7 @@ collector {
 
   # Configure the P3P policy header.
   p3p {
-    policyref = "/w3c/p3p.xml"
+    policyRef = "/w3c/p3p.xml"
     CP = "NOI DSP COR NID PSA OUR IND COM NAV STA"
   }
 
@@ -47,23 +42,44 @@ collector {
     #domain = "{{collectorCookieDomain}}"
   }
 
-  # The collector has a configurable sink for storing data in
-  # different formats for the enrichment process.
-  sink {
-    # Sinks currently supported are:
-    # 'kinesis' for writing Thrift-serialized records to a Kinesis stream
-    # 'kafka' for writing Thrift-serialized records to kafka
-    # 'stdout' for writing Base64-encoded Thrift-serialized records to stdout
-    #    Recommended settings for 'stdout' so each line printed to stdout
-    #    is a serialized record are:
-    #      1. Setting 'akka.loglevel = OFF' and 'akka.loggers = []'
-    #         to disable all logging.
-    #      2. Using 'sbt assembly' and 'java -jar ...' to disable
-    #         sbt logging.
-    enabled = "kinesis"
+  # When enabled and the cookie specified above is missing, performs a redirect to itself to check
+  # if third-party cookies are blocked using the specified name. If they are indeed blocked,
+  # fallbackNetworkId is used instead of generating a new random one.
+  cookieBounce {
+    enabled = false
+    # The name of the request parameter which will be used on redirects checking that third-party
+    # cookies work.
+    name = "n3pc"
+    # Network user id to fallback to when third-party cookies are blocked.
+    fallbackNetworkUserId = "00000000-0000-4000-A000-000000000000"
+  }
 
-    kinesis {
-      thread-pool-size: 10 # Thread pool size for Kinesis API requests
+  streams {
+    # Events which have successfully been collected will be stored in the good stream/topic
+    good = ${kinesisStreamGoodName}
+
+    # Events that are too big (w.r.t Kinesis 1MB limit) will be stored in the bad stream/topic
+    bad = ${kinesisStreamBadName}
+
+    useIpAddressAsPartitionKey = false
+
+    sink {
+      # Sinks currently supported are:
+      # 'kinesis' for writing Thrift-serialized records to a Kinesis stream
+      # 'kafka' for writing Thrift-serialized records to kafka
+      # 'stdout' for writing Base64-encoded Thrift-serialized records to stdout
+      #    Recommended settings for 'stdout' so each line printed to stdout
+      #    is a serialized record are:
+      #      1. Setting 'akka.loglevel = OFF' and 'akka.loggers = []'
+      #         to disable all logging.
+      #      2. Using 'sbt assembly' and 'java -jar ...' to disable
+      #         sbt logging.
+      enabled = "kinesis"
+
+      region = "eu-west-1"
+
+      # Thread pool size for Kinesis API requests
+      threadPoolSize: 10
 
       # The following are used to authenticate for the Amazon Kinesis sink.
       #
@@ -74,43 +90,26 @@ collector {
       #
       # If both are set to 'env', use environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
       aws {
-        access-key: "env"
-        secret-key: "env"
-      }
-
-      # Data will be stored in the following stream.
-      stream {
-        region: "eu-west-1"
-        good: ${kinesisStreamGoodName}
-        bad: ${kinesisStreamBadName}
+        accessKey: "default"
+        secretKey: "default"
       }
 
       # Minimum and maximum backoff periods
       backoffPolicy: {
         minBackoff: 100
-        maxBackoff: 1000
+        maxBackoff: 2000
       }
     }
 
-    kafka {
-brokers: "{{collectorKafkaBrokers}}"
-
-# Data will be stored in the following topics
-           topic {
-good: "{{collectorKafkaTopicGoodName}}"
-        bad: "{{collectorKafkaTopicBadName}}"
-           }
-    }
-
-# Incoming events are stored in a buffer before being sent to Kinesis/Kafka.
-# The buffer is emptied whenever:
+    # Incoming events are stored in a buffer before being sent to Kinesis/Kafka.
+    # The buffer is emptied whenever:
     # - the number of stored records reaches record-limit or
     # - the combined size of the stored records reaches byte-limit or
     # - the time in milliseconds since the buffer was last emptied reaches time-limit
     buffer {
-      byte-limit: 1000
-      record-limit: 1000
-      time-limit: 1000
+      byteLimit: 8192
+      recordLimit: 1000
+      timeLimit: 1000
     }
   }
 }
@@ -120,22 +119,19 @@ good: "{{collectorKafkaTopicGoodName}}"
 akka {
   loglevel = INFO # 'OFF' for no logging, 'DEBUG' for all logging.
   loggers = ["akka.event.slf4j.Slf4jLogger"]
-}
 
-# spray-can is the server the Stream collector uses and has configurable
-# options defined at
-# https://github.com/spray/spray/blob/master/spray-can/src/main/resources/reference.conf
-spray.can.server {
-  # To obtain the hostname in the collector, the 'remote-address' header
-  # should be set. By default, this is disabled, and enabling it
-  # adds the 'Remote-Address' header to every request automatically.
-  remote-address-header = on
+  http.server {
+    # To obtain the hostname in the collector, the 'remote-address' header
+    # should be set. By default, this is disabled, and enabling it
+    # adds the 'Remote-Address' header to every request automatically.
+    remote-address-header = on
 
-  uri-parsing-mode = relaxed
-  raw-request-uri-header = on
+    raw-request-uri-header = on
 
-  # Define the maximum request length (the default is 2048)
-  parsing {
-    max-uri-length = 32768
+    # Define the maximum request length (the default is 2048)
+    parsing {
+      max-uri-length = 32768
+      uri-parsing-mode = relaxed
+    }
   }
 }
