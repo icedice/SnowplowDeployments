@@ -1,7 +1,7 @@
 # SnowplowDeployments
 Files needed to deploy Snowplow to Docker.
 
-# TL;DR (as of 2017-09-07)
+# TL;DR (as of 2018-01-02)
 ## Building
 ```bash
 git submodule update --init --recursive
