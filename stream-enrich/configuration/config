@@ -47,7 +47,8 @@ enrich {
       enriched = ${kinesis_output_good}
       bad = ${kinesis_output_bad}
 
-      partitionKey = "domain_userid"
+      # This is not the best partition key, but it is guaranteed to be non-null.
+      partitionKey = "user_ipaddress"
     }
 
     kinesis {
