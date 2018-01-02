@@ -3,8 +3,6 @@ Files needed to deploy Snowplow to Docker.
 
 # TL;DR (as of 2017-09-07)
 ## Building
-Assuming Oracle JDK 1.7 is in _/opt/jdk1.7.0_80_ and _sbt-extras_ is in PATH. Note: In R89, Java 8 is finally officially supported so when we upgrade, we can also upgrade to JDK 8.
-
 ```bash
 git submodule update --init --recursive
 
@@ -50,10 +48,7 @@ scala-alpine is the base image for the following images. It is based on Alpine L
 ## Deploying the iglu repo
 The iglu repo can be added to S3 and exposed as a website. Configure _stream-enrich/configuration/resolver.json_ with the relevant URL.
 
-# Tips and tricks
-_.dockerignore_ is set up to ignore a lot of files to make the Docker build context smaller. If you need to COPY a file or folder in a Dockerfile and it cannot find the given path, check that it is not ignored in _.dockerignore_.
-
-## Updating Snowplow version
+# Updating Snowplow version
 In the *snowplow* directory, do a `git checkout` of a commit, branch or tag. The submodule itself will not have any changes if you run `git status`, however this repository will have changes to commit and push resulting in an update of the submodule in the remote as well.
 
 After checking out the relevant commit, branch or tag, recursively update the submodule to pull changes from the submodule's submodules.
@@ -67,3 +62,6 @@ git submodule update --init --recursive
 git add .
 gc -m "Update Snowplow to R89."
 ```
+
+# Tips and tricks
+_.dockerignore_ is set up to ignore a lot of files to make the Docker build context smaller. If you need to COPY a file or folder in a Dockerfile and it cannot find the given path, check that it is not ignored in _.dockerignore_.
