@@ -1,5 +1,5 @@
 FROM openjdk:8-jre-alpine
-MAINTAINER Asger Bachmann <asger.g.bachmann@jp.dk>
+LABEL maintainer="Asger Bachmann <asger.g.bachmann@jp.dk>"
 
 # From https://github.com/frol/docker-alpine-scala/.
 ENV SCALA_VERSION=2.11.11 \

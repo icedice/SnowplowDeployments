@@ -12,38 +12,12 @@
 # governing permissions and limitations there under.
 
 enrich {
-  # Sources currently supported are:
-  # 'kinesis' for reading Thrift-serialized records from a Kinesis stream
-  # 'kafka' for reading Thrift-serialized records from a Kafka topic
-  # 'stdin' for reading Base64-encoded Thrift-serialized records from stdin
-  source = "kinesis"
-
-  # Sinks currently supported are:
-  # 'kinesis' for writing enriched events to one Kinesis stream and invalid events to another.
-  # 'kafka' for writing enriched events to one Kafka topic and invalid events to another.
-  # 'stdouterr' for writing enriched events to stdout and invalid events to stderr.
-  #    Using "sbt assembly" and "java -jar" is recommended to disable sbt
-  #    logging.
-  sink = "kinesis"
-
-  # AWS credentials
-  #
-  # If both are set to 'default', use the default AWS credentials provider chain.
-  #
-  # If both are set to 'iam', use AWS IAM Roles to provision credentials.
-  #
-  # If both are set to 'env', use environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-  aws {
-    accessKey = "default"
-    secretKey = "default"
-  }
-
   streams {
-    in = {
+    in {
       raw = ${kinesis_input_good}
     }
 
-    out = {
+    out {
       enriched = ${kinesis_output_good}
       bad = ${kinesis_output_bad}
 
@@ -51,11 +25,22 @@ enrich {
       partitionKey = "user_ipaddress"
     }
 
-    kinesis {
+    sourceSink {
+      enabled = kinesis
+
       region = "eu-west-1"
 
+      # Use the default AWS credentials provider chain.
+      aws {
+        accessKey = "default"
+        secretKey = "default"
+      }
+      
       # Maximum number of records to get from Kinesis per call to GetRecords
       maxRecords = 10000
+
+      # Note: This only effects the first run of this application on a stream.
+      initialPosition = "TRIM_HORIZON"
 
       # Minimum and maximum backoff periods
       # - Units = Milliseconds
@@ -63,27 +48,6 @@ enrich {
         minBackoff = 100
         maxBackoff = 2000
       }
-
-      # LATEST: most recent data.
-      # TRIM_HORIZON: oldest available data.
-      # Note: This only effects the first run of this application
-      # on a stream.
-      initialPosition = "TRIM_HORIZON"
-    }
-
-    # Unused but required by the configuration parser.
-    kafka {
-      brokers = ""
-      retries = 0
-    }
-
-    # Unused but required by the configuration parser.
-    nsq {
-      rawChannel = ""
-      host = ""
-      port = 0
-      lookupHost = ""
-      lookupPort = 0
     }
 
     # After enrichment, are accumulated in a buffer before being sent to Kinesis.
@@ -92,7 +56,7 @@ enrich {
     # - the combined size of the stored records reaches byte-limit or
     # - the time in milliseconds since it was last emptied exceeds time-limit when
     #   a new event enters the buffer
-    buffer = {
+    buffer {
       byteLimit = 4096
       recordLimit = 5
       timeLimit = 1000

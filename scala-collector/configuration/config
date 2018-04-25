@@ -11,7 +11,6 @@
 # implied.  See the Apache License Version 2.0 for the specific language
 # governing permissions and limitations there under.
 
-# 'collector' contains configuration options for the main Scala collector.
 collector {
   # The collector runs as a web service specified on the following
   # interface and port.
@@ -36,10 +35,14 @@ collector {
     expiration = "365 days" # e.g. "365 days"
     # Network cookie name
     name = "jp"
-    # The domain is optional and will make the cookie accessible to other
-    # applications on the domain. Comment out this line to tie cookies to
-    # the collector's full domain
-    #domain = "{{collectorCookieDomain}}"
+  }
+
+  # Cross domain policy configuration. In R101, this configuration became mandatory.
+  # We disable the crossdomain.xml route as we don't use Flash or anything like that.
+  crossDomain {
+    enabled = false
+    domain = "*"
+    secure = true
   }
 
   # When enabled and the cookie specified above is missing, performs a redirect to itself to check
@@ -54,6 +57,16 @@ collector {
     fallbackNetworkUserId = "00000000-0000-4000-A000-000000000000"
   }
 
+  # When enabled, the redirect url passed via the `u` query parameter is scanned for a placeholder
+  # token. All instances of that token are replaced withe the network ID. If the placeholder isn't
+  # specified, the default value is `${SP_NUID}`. This configuration is mandatory even though the
+  # functionality is disabled.
+  redirectMacro {
+    enabled = false
+    # Optional custom placeholder token (defaults to the literal `${SP_NUID}`)
+    placeholder = "[TOKEN]"
+  }
+
   streams {
     # Events which have successfully been collected will be stored in the good stream/topic
     good = ${kinesisStreamGoodName}
@@ -64,37 +77,21 @@ collector {
     useIpAddressAsPartitionKey = false
 
     sink {
-      # Sinks currently supported are:
-      # 'kinesis' for writing Thrift-serialized records to a Kinesis stream
-      # 'kafka' for writing Thrift-serialized records to kafka
-      # 'stdout' for writing Base64-encoded Thrift-serialized records to stdout
-      #    Recommended settings for 'stdout' so each line printed to stdout
-      #    is a serialized record are:
-      #      1. Setting 'akka.loglevel = OFF' and 'akka.loggers = []'
-      #         to disable all logging.
-      #      2. Using 'sbt assembly' and 'java -jar ...' to disable
-      #         sbt logging.
       enabled = "kinesis"
 
       region = "eu-west-1"
 
-      # Thread pool size for Kinesis API requests
+      # Thread pool size for Kinesis API requests.
       threadPoolSize: 10
 
-      # The following are used to authenticate for the Amazon Kinesis sink.
-      #
-      # If both are set to 'default', the default provider chain is used
+      # Use the default provider chain is used
       # (see http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html)
-      #
-      # If both are set to 'iam', use AWS IAM Roles to provision credentials.
-      #
-      # If both are set to 'env', use environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
       aws {
         accessKey: "default"
         secretKey: "default"
       }
 
-      # Minimum and maximum backoff periods
+      # Minimum and maximum backoff periods.
       backoffPolicy: {
         minBackoff: 100
         maxBackoff: 2000

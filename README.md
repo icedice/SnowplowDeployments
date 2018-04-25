@@ -7,9 +7,8 @@ Files needed to deploy Snowplow to Docker.
 git submodule update --init --recursive
 
 # Use subshells to avoid changing this shell's working directory.
-(cd snowplow/2-collectors/scala-stream-collector; sbt assembly)
-
-(cd snowplow/3-enrich/stream-enrich; sbt assembly)
+(cd snowplow/2-collectors/scala-stream-collector; sbt "project kinesis" assembly)
+(cd snowplow/3-enrich/stream-enrich; sbt "project kinesis" assembly)
 
 docker build -f Dockerfile-scala-alpine -t scala-alpine .
 docker build -f Dockerfile-scala-collector -t scala-collector .
@@ -38,11 +37,11 @@ scala-alpine is the base image for the following images. It is based on Alpine L
 * Run `docker build -f Dockerfile-scala-alpine -t scala-alpine .`.
 
 ### Building scala-collector
-* Build the scala-collector by following the instructions in the Snowplow project (see _snowplow/2-collectors/scala-stream-collector/README.md_).
+* Build the scala-collector by following the instructions in the Snowplow project (see _snowplow/2-collectors/scala-stream-collector/README.md_). It is a good idea to run `sbt clean` before assembling the jar file as this will ensure that no old jar files are present and accidentally used in the docker images.
 * Run `docker build -f Dockerfile-scala-collector -t scala-collector .`.
 
 ### Building stream enricher
-* Build the stream enricher by following the instructions in the project (see _snowplow/3-enrich/stream-enrich/README.md_).
+* Build the stream enricher by following the instructions in the project (see _snowplow/3-enrich/stream-enrich/README.md_). It is a good idea to run `sbt clean` before assembling the jar file as this will ensure that no old jar files are present and accidentally used in the docker images.
 * Run `docker build -f Dockerfile-stream-enrich -t stream-enrich .`.
 
 ## Deploying the iglu repo
@@ -57,9 +56,12 @@ For example, to update to R89 using the r89-plain-of-jars tag and commit the cha
 ```bash
 cd snowplow
 git checkout r89-plain-of-jars
-cd ..
 git submodule update --init --recursive
+cd ..
 git add .
+
+# Follow https://github.com/snowplow/snowplow/wiki/Upgrade-Guide and make the appropriate changes.
+
 gc -m "Update Snowplow to R89."
 ```
 
