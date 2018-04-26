@@ -3,7 +3,15 @@ LABEL maintainer="Asger Bachmann <asger.g.bachmann@jp.dk>"
 
 ENV VERSION="0.13.0"
 
-COPY ./snowplow/2-collectors/scala-stream-collector/kinesis/target/scala-2.11/snowplow-stream-collector-kinesis-${VERSION}.jar /app/snowplow-stream-collector-kinesis-${VERSION}.jar
+ENV ZIP_FILE_NAME="snowplow_scala_stream_collector_kinesis_${VERSION}.zip" \
+    JAR_FILE_NAME="snowplow-stream-collector-kinesis-${VERSION}.jar"
+
+RUN cd /tmp && \
+    wget "https://bintray.com/snowplow/snowplow-generic/download_file?file_path=${ZIP_FILE_NAME}" -O ${ZIP_FILE_NAME} && \
+    mkdir /app && \
+    unzip ${ZIP_FILE_NAME} -d /app && \
+    rm ${ZIP_FILE_NAME}
+
 COPY ./scala-collector/configuration/config /app/configuration/config
 
-CMD java -jar /app/snowplow-stream-collector-kinesis-${VERSION}.jar --config /app/configuration/config
+CMD java -jar /app/${JAR_FILE_NAME} --config /app/configuration/config

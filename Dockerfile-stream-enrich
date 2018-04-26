@@ -1,11 +1,19 @@
 FROM scala-alpine
 LABEL maintainer="Asger Bachmann <asger.g.bachmann@jp.dk>"
 
-ENV VERSION="0.15.0"
+ENV VERSION="0.16.0"
 
-COPY ./snowplow/3-enrich/stream-enrich/kinesis/target/scala-2.11/snowplow-stream-enrich-kinesis-${VERSION}.jar /app/snowplow-stream-enrich-kinesis-${VERSION}.jar
+ENV ZIP_FILE_NAME="snowplow_stream_enrich_kinesis_${VERSION}.zip" \
+    JAR_FILE_NAME="snowplow-stream-enrich-kinesis-${VERSION}.jar"
+
+RUN cd /tmp && \
+    wget "https://bintray.com/snowplow/snowplow-generic/download_file?file_path=${ZIP_FILE_NAME}" -O ${ZIP_FILE_NAME} && \
+    mkdir /app && \
+    unzip ${ZIP_FILE_NAME} -d /app && \
+    rm ${ZIP_FILE_NAME}
+
 COPY ./stream-enrich/configuration/config /app/configuration/config
 COPY ./stream-enrich/configuration/resolver.json /app/configuration/resolver.json
 COPY ./stream-enrich/configuration/enrichments/ /app/configuration/enrichments/
 
-CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/snowplow-stream-enrich-kinesis-${VERSION}.jar --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
+CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/${JAR_FILE_NAME} --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments

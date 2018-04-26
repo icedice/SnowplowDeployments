@@ -1,9 +1,0 @@
-# Ignore all folders except for the application folder's and their configurations.
-snowplow/
-schemas/
-tracking_example/
-scripts/
-
-# Because we ignore the snowplow folder, un-ignore the specific application jars that we have build.
-!snowplow/2-collectors/scala-stream-collector/kinesis/target/scala-2.11/*.jar
-!snowplow/3-enrich/stream-enrich/kinesis/target/scala-2.11/*.jar
