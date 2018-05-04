@@ -19,7 +19,7 @@
         },
         "corp_id": {
             "type": "string",
-            "pattern": "^\d+$|^NOTSET$"
+            "pattern": "^[0-9]+$|^NOTSET$"
         },
         "user_authenticated": {
             "enum": ["yes", "no"]
