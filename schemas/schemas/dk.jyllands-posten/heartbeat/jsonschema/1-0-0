@@ -1,0 +1,26 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-1#",
+    "description": "Schema for the current view's heartbeat configuration.",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "heartbeat",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "enabled_for_views_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+        },
+        "seconds_between_beats": {
+            "type": "integer",
+            "minimum": 0
+        }
+    },
+    "required": [
+        "enabled_for_views_ratio",
+        "seconds_between_beats"
+    ]
+}
