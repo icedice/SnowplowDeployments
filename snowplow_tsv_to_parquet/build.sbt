@@ -1,0 +1,29 @@
+lazy val root = (project in file("."))
+  .settings(
+    name := "snowplow_s3_to_parquet",
+    scalaVersion := "2.12.5",
+    version      := "1.0.0"
+  )
+
+val parquetVersion = "1.10.0"
+val hadoopVersion = "3.1.0"
+val awsVersion = "1.11.271"
+
+libraryDependencies ++= Seq(
+  "org.slf4j" % "slf4j-log4j12" % "1.7.25",
+
+  "org.apache.parquet" % "parquet-common" % parquetVersion,
+  "org.apache.parquet" % "parquet-encoding" % parquetVersion,
+  "org.apache.parquet" % "parquet-column" % parquetVersion,
+  "org.apache.parquet" % "parquet-hadoop" % parquetVersion,
+  "org.apache.parquet" % "parquet-avro" % parquetVersion,
+
+  "org.apache.hadoop" % "hadoop-client" % hadoopVersion,
+  // The AWS SDK bundle from hadoop-aws takes up a lot of space so exclude that and set an explicit requirement for
+  // the SDKs that are needed by hadoop-aws.
+  "org.apache.hadoop" % "hadoop-aws" % hadoopVersion exclude("com.amazonaws", "aws-java-sdk-bundle"),
+  "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion, // For some reason, hadoop-aws also requires the DynamoDB SDK.
+  "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK.
+
+  "org.json4s" %% "json4s-native" % "3.5.4"
+)
