@@ -1,8 +1,9 @@
 lazy val root = (project in file("."))
+  .enablePlugins(JavaAppPackaging)
   .settings(
-    name := "snowplow_s3_to_parquet",
+    name := "snowplow-tsv-to-parquet",
     scalaVersion := "2.12.5",
-    version      := "1.0.0"
+    version      := "1.0-SNAPSHOT"
   )
 
 val parquetVersion = "1.10.0"
@@ -27,3 +28,5 @@ libraryDependencies ++= Seq(
 
   "org.json4s" %% "json4s-native" % "3.5.4"
 )
+
+dockerBaseImage := "openjdk:8-jre-slim"

@@ -19,17 +19,10 @@ object Main {
 
   private val logger = LoggerFactory.getLogger("Main")
 
-  private val inBucket = sys.env.getOrElse("S3_INPUT_BUCKET", "jpmedier-datalake-dev")
-  logger.info(s"Working with input bucket $inBucket.")
-  private val outBucket = sys.env.getOrElse("S3_OUTPUT_BUCKET", "behavior-datalake-dev")
-  logger.info(s"Working with output bucket $outBucket.")
-
   private implicit val s3: AmazonS3 = AmazonS3ClientBuilder.defaultClient()
   private implicit def s3ToS3Extension(s3: AmazonS3): S3Extension = new S3Extension(s3)
 
-  def run(dtToProcess: LocalDateTime): Unit = {
-    logger.info(s"Working with date $dtToProcess.")
-
+  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime): Unit = {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
@@ -72,7 +65,21 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    run(LocalDateTime.of(2018, 7, 4, 12, 0))
+    assert(args.length == 6, "Run with parameters {in bucket} {out bucket} {year} {month} {day} {hour}.")
+
+    val inBucket = args(0)
+    val outBucket = args(1)
+    val year = args(2).toInt
+    val month = args(3).toInt
+    val day = args(4).toInt
+    val hour = args(5).toInt
+    val dt = LocalDateTime.of(year, month, day, hour, 0)
+
+    logger.info(s"Working with input bucket $inBucket.")
+    logger.info(s"Working with output bucket $outBucket.")
+    logger.info(s"Working with date $dt.")
+
+    run(inBucket, outBucket, dt)
   }
 
 }
