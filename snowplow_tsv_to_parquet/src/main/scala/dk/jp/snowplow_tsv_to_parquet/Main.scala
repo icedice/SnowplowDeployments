@@ -4,6 +4,7 @@ import java.io._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, TsvToAvroConverter}
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
@@ -19,7 +20,15 @@ object Main {
 
   private val logger = LoggerFactory.getLogger("Main")
 
-  private implicit val s3: AmazonS3 = AmazonS3ClientBuilder.defaultClient()
+  // Up the socket timeout to avoid "Connection reset" errors due to long living connections.
+  private val s3ClientConfig = new ClientConfiguration()
+  private val socketTimeout = 15 * 60 * 1000 // 15 minutes.
+  s3ClientConfig.setSocketTimeout(socketTimeout)
+
+  private implicit val s3: AmazonS3 = AmazonS3ClientBuilder
+    .standard()
+    .withClientConfiguration(s3ClientConfig)
+    .build()
   private implicit def s3ToS3Extension(s3: AmazonS3): S3Extension = new S3Extension(s3)
 
   def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime): Unit = {
