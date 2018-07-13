@@ -13,12 +13,16 @@ import dk.jp.snowplow_tsv_to_parquet.util.{S3Extension, Schemas}
 import org.apache.avro.generic.GenericData
 import org.slf4j.LoggerFactory
 
+import scala.collection.parallel.ForkJoinTaskSupport
 import scala.io.Source
 import scala.language.implicitConversions
 
 object Main {
 
   private val logger = LoggerFactory.getLogger("Main")
+
+  // The level of parallelism to use when converting event files from S3 to Avro objects.
+  private val parallelism = 4
 
   // Up the socket timeout to avoid "Connection reset" errors due to long living connections.
   private val s3ClientConfig = new ClientConfiguration()
@@ -35,11 +39,12 @@ object Main {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
-    val inStreams = s3.getContent(inBucket, prefix)
+    val inStreams = s3.getContent(inBucket, prefix).par
     logger.info(s"Found ${inStreams.size} keys in prefix $prefix...")
 
+    inStreams.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(parallelism))
+
     val records = inStreams
-      .par
       .flatMap(getRecords)
       .seq
 
