@@ -1,0 +1,43 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/2-0-0#",
+    "description": "Schema for a page view event",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "user",
+        "format": "jsonschema",
+        "version": "2-0-1"
+    },
+    "type": "object",
+    "properties": {
+        "anon_id": {
+            "type": "string",
+            "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
+        },
+        "user_id": {
+            "type": "string",
+            "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})|anon$"
+        },
+        "corp_id": {
+            "type": "string",
+            "pattern": "^[0-9]+$|^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^NOTSET$"
+        },
+        "user_authenticated": {
+            "enum": ["yes", "no"]
+        },
+        "user_authorized": {
+            "enum": ["yes", "no"]
+        },
+        "ab_group": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+        }
+    },
+    "required": [
+        "anon_id",
+        "user_id",
+        "user_authenticated",
+        "user_authorized",
+        "ab_group"
+    ]
+}
