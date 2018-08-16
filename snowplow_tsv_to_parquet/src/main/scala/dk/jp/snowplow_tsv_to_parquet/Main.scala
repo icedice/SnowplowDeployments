@@ -62,7 +62,7 @@ object Main {
     val inStreamsPar = inStreams.par
     inStreamsPar.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(parallelism))
 
-    val records = inStreams
+    val records = inStreamsPar
       .flatMap(getRecords)
       .seq
 
