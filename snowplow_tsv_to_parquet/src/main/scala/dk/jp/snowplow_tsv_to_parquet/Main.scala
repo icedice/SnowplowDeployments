@@ -23,6 +23,8 @@ object Main {
 
   // The level of parallelism to use when converting event files from S3 to Avro objects.
   private val parallelism = 4
+  // The number of files to keep a connection in S3 open to at a time.
+  private val inStreamBatchSize = parallelism * 3
 
   // Up the socket timeout to avoid "Connection reset" errors due to long living connections.
   private val s3ClientConfig = new ClientConfiguration()
@@ -39,25 +41,34 @@ object Main {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
-    val inStreams = s3.getContent(inBucket, prefix).par
-    logger.info(s"Found ${inStreams.size} keys in prefix $prefix...")
-
-    inStreams.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(parallelism))
-
-    val records = inStreams
-      .flatMap(getRecords)
-      .seq
-
-    // ParquetWriter is not thread safe, so we can only write to it sequentially.
-    logger.info("Writing Parquet file(s)...")
+    val inStreamBatches = s3.getContent(inBucket, prefix, inStreamBatchSize)
     val sink = new AvroToParquetSink(Schemas.out)
-    records.foreach(sink.write(_, dtToProcess))
+
+    inStreamBatches.foreach { inStreams =>
+      logger.info(s"Found ${inStreams.size} keys in prefix $prefix...")
+      processBatch(inStreams, sink, dtToProcess)
+    }
+
+    logger.info("Closing sink and finalizing writing files to local storage...")
     val partsWritten = sink.close()
 
     logger.info("Uploading file(s) to S3...")
     partsWritten.par.foreach(s3.putObject(outBucket, _))
 
     logger.info("Done.")
+  }
+
+  private def processBatch(inStreams: Seq[InputStream], sink: AvroToParquetSink, dtToProcess: LocalDateTime): Unit = {
+    val inStreamsPar = inStreams.par
+    inStreamsPar.tasksupport = new ForkJoinTaskSupport(new java.util.concurrent.ForkJoinPool(parallelism))
+
+    val records = inStreams
+      .flatMap(getRecords)
+      .seq
+
+    // ParquetWriter is not thread safe, so we can only write to it sequentially.
+    logger.info("Writing batch to sink...")
+    records.foreach(sink.write(_, dtToProcess))
   }
 
   private def getRecords(in: InputStream): Iterator[GenericData.Record] = {

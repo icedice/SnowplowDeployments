@@ -31,7 +31,16 @@ class S3Extension(s3: AmazonS3) {
     new GZIPInputStream(obj.getObjectContent)
   }
 
-  def getContent(bucket: String, prefix: String): Seq[InputStream] = getAllKeys(bucket, prefix).map(getObjContent(bucket, _))
+  /**
+    * Get all objects as [[InputStream]]s from bucket's prefix. If we have files open for too long, we end up with
+    * [[java.net.SocketException]]s from the S3 SDK. Therefore, we return a iterator of iterators allowing us to only
+    * keep connections to the current 'batch' of streams open while still allowing us to process the 'batch' in parallel.
+    */
+  def getContent(bucket: String, prefix: String, batchSize: Int): Iterator[Seq[InputStream]] = {
+    getAllKeys(bucket, prefix)
+      .grouped(batchSize)
+      .map(_.map(getObjContent(bucket, _)))
+  }
 
   def putObject(bucket: String, parts: OutputPathPartitions): Unit = {
     s3.putObject(bucket, s"snowplow/${parts.savePath()}", new File(s"/tmp/${parts.savePath()}"))
