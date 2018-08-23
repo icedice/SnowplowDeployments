@@ -1,0 +1,5 @@
+pyarrow==0.10.0
+s3fs==0.1.6
+flake8==3.5.0
+flake8-mypy==17.8.0
+pandas==0.23.4
