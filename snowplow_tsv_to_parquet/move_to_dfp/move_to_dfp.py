@@ -12,7 +12,6 @@ from s3fs import S3FileSystem
 
 
 S3_INPUT_BUCKET = os.environ['S3_INPUT_BUCKET']  # 'behavior-datalake' on prod.
-S3_INPUT_PREFIX = os.environ['S3_INPUT_PREFIX']  # 'snowplow/event=page_view' on prod
 S3_OUTPUT_BUCKET = os.environ['S3_OUTPUT_BUCKET']  # 'jyllandsposten-upload-prod' on prod
 S3_OUTPUT_PREFIX = os.environ['S3_OUTPUT_PREFIX']  # 'snowplow_pageviews' on prod
 
@@ -59,7 +58,7 @@ def drop_contexts(table: pa.Table) -> pa.Table:
 
 def read_table(date_to_process: date, read_nthreads: int, fs: S3FileSystem) -> pa.Table:
     in_date_path = date_to_process.strftime('year=%Y/month=%m/day=%d')
-    in_path = 's3://{}/{}/{}'.format(S3_INPUT_BUCKET, S3_INPUT_PREFIX, in_date_path)
+    in_path = 's3://{}/snowplow/event=page_view/{}'.format(S3_INPUT_BUCKET, in_date_path)
     logging.info('Reading data for input path {}.'.format(in_path))
 
     try:

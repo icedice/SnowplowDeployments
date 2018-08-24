@@ -12,7 +12,6 @@ pip install -r requirements.txt
 Set your environment variables for the current shell:
 ```bash
 export S3_INPUT_BUCKET=behavior-datalake-test
-export S3_INPUT_PREFIX=snowplow/event=page_view
 export S3_OUTPUT_BUCKET=behavior-datalake-test
 export S3_OUTPUT_PREFIX=snowplow_pageviews_dfp
 ```
