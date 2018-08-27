@@ -20,6 +20,10 @@ object PartitionCatalog {
     * If the partitions gets messed up for some reason, we can run a Glue Crawler to get back on track.
     */
   def addPartitions(parts: Seq[OutputPathPartitions], bucket: String, partitionDatabase: String, athenaOutputLocation: String): Unit = {
+    if (parts.isEmpty) {
+      return
+    }
+
     // We don't use the output for anything, but we have to provide a location so just generate a more-or-less unique
     // location within the given bucket and prefix.
     val fullOutputLocation = s"s3://$athenaOutputLocation/dt=${LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}"
