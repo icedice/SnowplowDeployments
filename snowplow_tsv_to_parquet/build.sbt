@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
   // the SDKs that are needed by hadoop-aws.
   "org.apache.hadoop" % "hadoop-aws" % hadoopVersion exclude("com.amazonaws", "aws-java-sdk-bundle"),
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion, // For some reason, hadoop-aws also requires the DynamoDB SDK.
-  "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK.
+  "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK...
+  "com.amazonaws" % "aws-java-sdk-athena" % "1.11.271", // ... and the Athena SDK.
 
   "org.json4s" %% "json4s-native" % "3.5.4"
 )

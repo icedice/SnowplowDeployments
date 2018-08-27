@@ -20,7 +20,7 @@ class AvroToParquetSink(schema: Schema) {
   // value.
   private val writers = mutable.Map[OutputPathPartitions, ParquetWriter[GenericData.Record]]()
   private def newWriter(parts: OutputPathPartitions): ParquetWriter[GenericData.Record] = {
-    val pathForParts = new Path(s"/tmp/${parts.savePath()}")
+    val pathForParts = new Path(s"/tmp/${parts.getSavePath}")
     AvroParquetWriter
       .builder[GenericData.Record](pathForParts)
       .withSchema(schema)

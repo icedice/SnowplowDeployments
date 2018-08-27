@@ -43,7 +43,7 @@ class S3Extension(s3: AmazonS3) {
   }
 
   def putObject(bucket: String, parts: OutputPathPartitions): Unit = {
-    s3.putObject(bucket, s"snowplow/${parts.savePath()}", new File(s"/tmp/${parts.savePath()}"))
+    s3.putObject(bucket, s"snowplow/${parts.getSavePath}", new File(s"/tmp/${parts.getSavePath}"))
   }
 
 }

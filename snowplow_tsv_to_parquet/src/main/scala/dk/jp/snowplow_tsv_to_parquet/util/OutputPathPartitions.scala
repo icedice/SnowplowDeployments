@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
   * when storing the data.
   */
 case class OutputPathPartitions(event: String, dt: LocalDateTime) {
-  def savePath(): String = {
+  def getSavePath: String = {
     val dtSuffix = dt.format(DateTimeFormatter.ofPattern("/'year'=yyyy/'month'=MM/'day'=dd/'hour'=HH/yyyyMMdd_HH.'pq'"))
     s"event=$event$dtSuffix"
   }

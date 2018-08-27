@@ -4,6 +4,7 @@ import java.io._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import athena.PartitionCatalog
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, TsvToAvroConverter}
@@ -37,7 +38,7 @@ object Main {
     .build()
   private implicit def s3ToS3Extension(s3: AmazonS3): S3Extension = new S3Extension(s3)
 
-  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime): Unit = {
+  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime, partitionDatabase: String, athenaOutputLocation: String): Unit = {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
@@ -55,7 +56,13 @@ object Main {
     logger.info("Uploading file(s) to S3...")
     partsWritten.par.foreach(s3.putObject(outBucket, _))
 
+    logger.info("Updating AWS Glue catalog partitions...")
+    PartitionCatalog.addPartitions(partsWritten, outBucket, partitionDatabase, athenaOutputLocation)
+
     logger.info("Done.")
+    // With the introduction of the PartitionCatalog and Athena SDK, the program does not automatically stop when we
+    // the end. Force stop it (with a peaceful exit code).
+    sys.exit(0)
   }
 
   private def processBatch(inStreams: Seq[InputStream], sink: AvroToParquetSink, dtToProcess: LocalDateTime): Unit = {
@@ -90,21 +97,25 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    assert(args.length == 6, "Run with parameters {in bucket} {out bucket} {year} {month} {day} {hour}.")
+    assert(args.length == 4, "Run with parameters {year} {month} {day} {hour}.")
 
-    val inBucket = args(0)
-    val outBucket = args(1)
-    val year = args(2).toInt
-    val month = args(3).toInt
-    val day = args(4).toInt
-    val hour = args(5).toInt
+    val year = args(0).toInt
+    val month = args(1).toInt
+    val day = args(2).toInt
+    val hour = args(3).toInt
     val dt = LocalDateTime.of(year, month, day, hour, 0)
-
-    logger.info(s"Working with input bucket $inBucket.")
-    logger.info(s"Working with output bucket $outBucket.")
     logger.info(s"Working with date $dt.")
 
-    run(inBucket, outBucket, dt)
+    val inBucket = sys.env.getOrElse("IN_BUCKET", throw new IllegalArgumentException("IN_BUCKET environment variable not set."))
+    logger.info(s"Working with input bucket $inBucket.")
+    val outBucket = sys.env.getOrElse("OUT_BUCKET", throw new IllegalArgumentException("OUT_BUCKET environment variable not set."))
+    logger.info(s"Working with output bucket $outBucket.")
+    val partitionDatabase = sys.env.getOrElse("PARTITION_DATABASE", throw new IllegalArgumentException("PARTITION_DATABASE environment variable not set."))
+    logger.info(s"Working with partition database $partitionDatabase.")
+    val athenaOutputLocation = sys.env.getOrElse("ATHENA_OUTPUT_LOCATION", throw new IllegalArgumentException("ATHENA_OUTPUT_LOCATION environment variable not set."))
+    logger.info(s"Working with Athena output location $athenaOutputLocation.")
+
+    run(inBucket, outBucket, dt, partitionDatabase, athenaOutputLocation)
   }
 
 }
