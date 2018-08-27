@@ -3,15 +3,15 @@ package dk.jp.snowplow_tsv_to_parquet.athena
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import com.amazonaws.services.athena.model.{QueryExecutionContext, ResultConfiguration, StartQueryExecutionRequest}
-import com.amazonaws.services.athena.{AmazonAthenaAsync, AmazonAthenaAsyncClientBuilder}
+import com.amazonaws.services.athena.model._
+import com.amazonaws.services.athena.{AmazonAthena, AmazonAthenaClientBuilder}
 import dk.jp.snowplow_tsv_to_parquet.util.OutputPathPartitions
 import org.slf4j.LoggerFactory
 
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
 
 object PartitionCatalog {
-  lazy val client: AmazonAthenaAsync = AmazonAthenaAsyncClientBuilder.defaultClient()
+  lazy val client: AmazonAthena = AmazonAthenaClientBuilder.defaultClient()
   private val logger = LoggerFactory.getLogger("PartitionCatalog")
 
   /**
@@ -36,15 +36,9 @@ object PartitionCatalog {
       .withQueryExecutionContext(new QueryExecutionContext().withDatabase(partitionDatabase))
       .withResultConfiguration(new ResultConfiguration().withOutputLocation(fullOutputLocation))
 
-    val res = client.startQueryExecutionAsync(req)
+    val res = client.startQueryExecution(req)
 
-    Try(res.get()) match {
-      case Success(_) => ()
-      case Failure(t) =>
-        logger.error("Unexpected error while updating partitions", t)
-        // For some reason, the program does not stop if res.get() fails. Force stop it.
-        sys.exit(1)
-    }
+    waitForQueryToComplete(res)
   }
 
   private def getQueryString(parts: Seq[OutputPathPartitions], bucket: String): String = {
@@ -56,6 +50,35 @@ object PartitionCatalog {
     val location = s"s3://$bucket/snowplow/${part.getSaveDirectory}"
     val dt = part.dt
     s"PARTITION (event = '${part.event}', year = ${dt.getYear}, month = ${dt.getMonthValue}, day = ${dt.getDayOfMonth}, hour = ${dt.getHour}) LOCATION '$location'"
+  }
+
+  private def waitForQueryToComplete(res: StartQueryExecutionResult): Unit = {
+    val getQueryExecutionRequest = new GetQueryExecutionRequest().withQueryExecutionId(res.getQueryExecutionId)
+
+    val sleepBetweenChecks = 500L
+    var numChecks = 0
+    while (true) {
+      if ((numChecks * sleepBetweenChecks).millis > 5.minutes) {
+        throw new RuntimeException("Timeout while waiting for Athena query to finish.")
+      }
+
+      val getQueryExecutionResult = client.getQueryExecution(getQueryExecutionRequest)
+      val queryState = getQueryExecutionResult.getQueryExecution.getStatus.getState
+
+      queryState match {
+        case "FAILED" => throw new RuntimeException("Query failed to with error message: " + getQueryExecutionResult.getQueryExecution.getStatus.getStateChangeReason)
+        case "CANCELLED" => throw new RuntimeException("Query was cancelled.")
+        case "SUCCEEDED" =>
+          // Break out of the infinite loop.
+          return
+        case _ =>
+          // Sleep an amount of time before retrying again.
+          Thread.sleep(sleepBetweenChecks)
+      }
+
+      numChecks += 1
+      logger.debug("Current state for the Athena query is: " + queryState)
+    }
   }
 
 }

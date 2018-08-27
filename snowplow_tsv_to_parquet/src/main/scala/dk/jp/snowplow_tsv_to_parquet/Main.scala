@@ -60,9 +60,6 @@ object Main {
     PartitionCatalog.addPartitions(partsWritten, outBucket, partitionDatabase, athenaOutputLocation)
 
     logger.info("Done.")
-    // With the introduction of the PartitionCatalog and Athena SDK, the program does not automatically stop when we
-    // the end. Force stop it (with a peaceful exit code).
-    sys.exit(0)
   }
 
   private def processBatch(inStreams: Seq[InputStream], sink: AvroToParquetSink, dtToProcess: LocalDateTime): Unit = {
