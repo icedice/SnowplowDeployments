@@ -53,7 +53,7 @@ object PartitionCatalog {
   }
 
   private def getPartitionQuery(part: OutputPathPartitions, bucket: String): String = {
-    val location = s"s3://$bucket/snowplow/${part.getSavePath}"
+    val location = s"s3://$bucket/snowplow/${part.getSaveDirectory}"
     val dt = part.dt
     s"PARTITION (event = '${part.event}', year = ${dt.getYear}, month = ${dt.getMonthValue}, day = ${dt.getDayOfMonth}, hour = ${dt.getHour}) LOCATION '$location'"
   }
