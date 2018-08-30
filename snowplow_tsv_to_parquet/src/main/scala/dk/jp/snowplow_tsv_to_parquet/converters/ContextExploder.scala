@@ -56,7 +56,7 @@ object ContextExploder {
 
   private def extractUser(userCtx: JValue): User = {
     val anonId = (userCtx \ "anon_id").getAs[String]
-    val userId = (userCtx \ "user_id").getAs[String]
+    val userId = (userCtx \ "user_id").getAs[String].filter(_ != "anon")
     val authorized = (userCtx \ "user_authorized").getAs[String].map(_ == "yes")
     User(anonId, userId, authorized)
   }
