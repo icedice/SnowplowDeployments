@@ -49,7 +49,7 @@ object PartitionCatalog {
   private def getPartitionQuery(part: OutputPathPartitions, bucket: String): String = {
     val location = s"s3://$bucket/snowplow/${part.getSaveDirectory}"
     val dt = part.dt
-    f"PARTITION (event = '${part.event}', date = ${dt.toLocalDate.toString}, hour = ${dt.getHour}%02d) LOCATION '$location'"
+    f"PARTITION (event = '${part.event}', date = '${dt.toLocalDate.toString}', hour = ${dt.getHour}%02d) LOCATION '$location'"
   }
 
   private def waitForQueryToComplete(res: StartQueryExecutionResult): Unit = {
