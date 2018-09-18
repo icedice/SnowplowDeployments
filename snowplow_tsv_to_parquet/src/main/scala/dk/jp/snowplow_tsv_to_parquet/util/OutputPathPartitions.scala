@@ -9,12 +9,12 @@ import java.time.format.DateTimeFormatter
   */
 case class OutputPathPartitions(event: String, dt: LocalDateTime) {
   def getSaveDirectory: String = {
-    val dtSuffix = dt.format(DateTimeFormatter.ofPattern("/'year'=yyyy/'month'=MM/'day'=dd/'hour'=HH"))
+    val dtSuffix = dt.format(DateTimeFormatter.ofPattern("/'date'=yyyy-MM-dd/'hour'=HH"))
     s"event=$event$dtSuffix"
   }
 
   def getSavePath: String = {
-    val fileName = dt.format(DateTimeFormatter.ofPattern("yyyyMMdd_HH.'pq'"))
+    val fileName = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.'pq'"))
     s"$getSaveDirectory/$fileName"
   }
 }

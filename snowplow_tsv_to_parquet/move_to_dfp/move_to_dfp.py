@@ -57,8 +57,7 @@ def drop_contexts(table: pa.Table) -> pa.Table:
 
 
 def read_table(date_to_process: date, read_nthreads: int, fs: S3FileSystem) -> pa.Table:
-    in_date_path = date_to_process.strftime('year=%Y/month=%m/day=%d')
-    in_path = 's3://{}/snowplow/event=page_view/{}'.format(S3_INPUT_BUCKET, in_date_path)
+    in_path = 's3://{}/snowplow/event=page_view/date={}'.format(S3_INPUT_BUCKET, str(date_to_process))
     logging.info('Reading data for input path {}.'.format(in_path))
 
     try:
