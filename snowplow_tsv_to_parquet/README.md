@@ -6,7 +6,7 @@ Convert Snowplow TSV files to Parquet format while also extracting some informat
 IN_BUCKET=jpmedier-datalake-dev
 OUT_BUCKET=behavior-datalake-dev
 PARTITION_DATABASE=snowplow-dev
-ATHENA_OUTPUT_LOCATION=aws-athena-query-results-092102721606-eu-west-1
+ATHENA_OUTPUT_LOCATION=aws-athena-query-results-092102721606-eu-west-1/snowplow-partitions
 ```
 
 # Compiling in IntelliJ IDEA
