@@ -7,6 +7,7 @@ import org.json4s.native.JsonMethods._
 import scala.util.Try
 
 private case class Pageview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean])
+private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean])
 private case class User(anonId: Option[String], userId: Option[String], authorized: Option[Boolean])
 private case class WebPage(id: Option[String])
 
@@ -19,8 +20,10 @@ object ContextExploder {
     val ctxsField = event(52).asInstanceOf[String]
     val wrappers = Try((parse(ctxsField) \ "data").asInstanceOf[JArray].arr).getOrElse(List[JValue]())
 
-    // Find the page_view, user and web_page contexts. There should only ever be one of each per page view event.
+    // Find the page_view/native_app_screen_view, user and web_page contexts. There should only ever be one of each per page view event.
     val pv = findContext(wrappers, "iglu:dk.jyllands-posten/page_view/") map extractPageview getOrElse Pageview(None, None, None, None)
+    val nasv = findContext(wrappers, "iglu:dk.jyllands-posten/native_app_screen_view/") map extractNativeAppScreenView getOrElse NativeAppScreenview(None, None, None, None)
+
     val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None)
     val webPage = findContext(wrappers, "iglu:com.snowplowanalytics.snowplow/web_page/") map extractWebPage getOrElse WebPage(None)
 
@@ -28,10 +31,12 @@ object ContextExploder {
       user.anonId.orNull,
       user.userId.orNull,
       user.authorized.orNull,
-      pv.site.orNull,
-      pv.contentId.orNull,
-      pv.sectionId.orNull,
-      pv.pageRestricted.orNull,
+      //Use pageview first, if that has empty options, use native app screen view to populate the
+      //additional fields
+      pv.site.orElse(nasv.site).orNull,
+      pv.contentId.orElse(nasv.contentId).orNull,
+      pv.sectionId.orElse(nasv.sectionId).orNull,
+      pv.pageRestricted.orElse(nasv.pageRestricted).orNull,
       webPage.id.orNull
     )
 
@@ -52,6 +57,14 @@ object ContextExploder {
     val sectionId = (pvCtx \ "section_id").getAs[Int]
     val pageRestricted = (pvCtx \ "page_restricted").getAs[String].map(_ == "yes")
     Pageview(site, contentId, sectionId, pageRestricted)
+  }
+
+  private def extractNativeAppScreenView(nasvCtx: JValue): NativeAppScreenview = {
+    val site = (nasvCtx \ "site").getAs[String]
+    val contentId = (nasvCtx \ "content_id").getAs[Int]
+    val sectionId = (nasvCtx \ "section_id").getAs[Int]
+    val pageRestricted = (nasvCtx \ "page_restricted").getAs[String].map(_ == "yes")
+    NativeAppScreenview(site, contentId, sectionId, pageRestricted)
   }
 
   private def extractUser(userCtx: JValue): User = {
