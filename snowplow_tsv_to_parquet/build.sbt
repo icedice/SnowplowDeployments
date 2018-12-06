@@ -6,6 +6,8 @@ lazy val root = (project in file("."))
     version      := "1.0-SNAPSHOT"
   )
 
+mainClass in (Compile, run) := Some("dk.jp.snowplow_tsv_to_parquet.Main")
+
 val parquetVersion = "1.10.0"
 val hadoopVersion = "3.1.0"
 val awsVersion = "1.11.271"
@@ -26,7 +28,7 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion, // For some reason, hadoop-aws also requires the DynamoDB SDK.
   "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK...
   "com.amazonaws" % "aws-java-sdk-athena" % "1.11.271", // ... and the Athena SDK.
-
+  "com.amazonaws" % "aws-java-sdk-sts" % "1.11.457",
   "org.json4s" %% "json4s-native" % "3.5.4"
 )
 
