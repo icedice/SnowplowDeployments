@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
     version      := "1.0-SNAPSHOT"
   )
 
-mainClass in (Compile, run) := Some("dk.jp.snowplow_tsv_to_parquet.Main")
+mainClass in Compile := Some("dk.jp.snowplow_tsv_to_parquet.Main")
 
 val parquetVersion = "1.10.0"
 val hadoopVersion = "3.1.0"
