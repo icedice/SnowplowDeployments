@@ -4,10 +4,11 @@ import java.io._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import athena.PartitionCatalog
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
+import com.amazonaws.services.athena.AmazonAthena
+import com.amazonaws.services.s3.AmazonS3
+import dk.jp.snowplow_tsv_to_parquet.athena.PartitionCatalog
 import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, TsvToAvroConverter}
+import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
 import dk.jp.snowplow_tsv_to_parquet.sources.TsvSource
 import dk.jp.snowplow_tsv_to_parquet.util.{S3Extension, Schemas}
@@ -27,18 +28,10 @@ object Main {
   // The number of files to keep a connection in S3 open to at a time.
   private val inStreamBatchSize = parallelism * 3
 
-  // Up the socket timeout to avoid "Connection reset" errors due to long living connections.
-  private val s3ClientConfig = new ClientConfiguration()
-  private val socketTimeout = 15 * 60 * 1000 // 15 minutes.
-  s3ClientConfig.setSocketTimeout(socketTimeout)
-
-  private implicit val s3: AmazonS3 = AmazonS3ClientBuilder
-    .standard()
-    .withClientConfiguration(s3ClientConfig)
-    .build()
   private implicit def s3ToS3Extension(s3: AmazonS3): S3Extension = new S3Extension(s3)
 
-  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime, partitionDatabase: String, athenaOutputLocation: String): Unit = {
+  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime, partitionDatabase: String, athenaOutputLocation: String,
+          s3: AmazonS3, athena: AmazonAthena): Unit = {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
@@ -57,7 +50,7 @@ object Main {
     partsWritten.par.foreach(s3.putObject(outBucket, _))
 
     logger.info("Updating AWS Glue catalog partitions...")
-    PartitionCatalog.addPartitions(partsWritten, outBucket, partitionDatabase, athenaOutputLocation)
+    PartitionCatalog.addPartitions(partsWritten, outBucket, partitionDatabase, athenaOutputLocation, athena)
 
     logger.info("Done.")
   }
@@ -112,7 +105,10 @@ object Main {
     val athenaOutputLocation = sys.env.getOrElse("ATHENA_OUTPUT_LOCATION", throw new IllegalArgumentException("ATHENA_OUTPUT_LOCATION environment variable not set."))
     logger.info(s"Working with Athena output location $athenaOutputLocation.")
 
-    run(inBucket, outBucket, dt, partitionDatabase, athenaOutputLocation)
+    val s3: AmazonS3 = AmazonClientFactory.createS3Client()
+    val athena: AmazonAthena = AmazonClientFactory.createAthenaClient()
+
+    run(inBucket, outBucket, dt, partitionDatabase, athenaOutputLocation, s3, athena)
   }
 
 }

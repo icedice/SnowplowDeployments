@@ -10,7 +10,7 @@ mainClass in (Compile, run) := Some("dk.jp.snowplow_tsv_to_parquet.Main")
 
 val parquetVersion = "1.10.0"
 val hadoopVersion = "3.1.0"
-val awsVersion = "1.11.271"
+val awsVersion = "1.11.467"
 
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-log4j12" % "1.7.25",
@@ -27,8 +27,8 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-aws" % hadoopVersion exclude("com.amazonaws", "aws-java-sdk-bundle"),
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion, // For some reason, hadoop-aws also requires the DynamoDB SDK.
   "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK...
-  "com.amazonaws" % "aws-java-sdk-athena" % "1.11.271", // ... and the Athena SDK.
-  "com.amazonaws" % "aws-java-sdk-sts" % "1.11.457",
+  "com.amazonaws" % "aws-java-sdk-sts" % awsVersion, // Local running of this code requires STS
+  "com.amazonaws" % "aws-java-sdk-athena" % awsVersion, // ... and the Athena SDK.
   "org.json4s" %% "json4s-native" % "3.5.4"
 )
 

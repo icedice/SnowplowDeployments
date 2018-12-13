@@ -15,41 +15,13 @@ The default settings for the Scala Compile Server in IntelliJ IDEA will result i
 ![Scala Compile Server Settings](readme_intellij_scala_compile_server_settings.png "Scala Compile Server Settings")
 
 # Backfilling using IntelliJ IDEA
+
 If backfilling of snowplow-tsv-to-parquet is needed, following should be done:
 
-1. Add Role informations in code (see description below)
-2. Run `Backfill.scala` (dates for backfilling can be set in the code) with the previous mentioned `Environment variables` and `AWS_PROFILE=mfa` or lookup on `AWS ECS` for `Prod` variables.
-  
-In `/SnowplowDeployments/snowplow_tsv_to_parquet/src/main/scala/dk/jp/snowplow_tsv_to_parquet/athena/PartitionCatalog.scala`,
-add following:
-
+1. Set environment variables
 ```bash
-object PartitionCatalog {
-
-val assumeRoleProvider = new STSAssumeRoleSessionCredentialsProvider.Builder("roleArn", "roleSessionName")
-.build()
-
-lazy val client: AmazonAthena = AmazonAthenaClientBuilder.standard().withCredentials(assumeRoleProvider).build()
-...
+AWS_ASSUME_ROLE_ARN=arnForProdDeveloperRole
+AWS_ROLE_SESSION_NAME=yourOwnSessionName
 ```
-
-In `/SnowplowDeployments/snowplow_tsv_to_parquet/src/main/scala/dk/jp/snowplow_tsv_to_parquet/Main.scala`,
-add `assumeRoleProvider` and insert in `private implicit val s3`
-```bash
-object Main {
-...
-val assumeRoleProvider = new STSAssumeRoleSessionCredentialsProvider.Builder("roleArn", "roleSessionName")
-.build()
-
-  private implicit val s3: AmazonS3 = AmazonS3ClientBuilder
-    .standard()
-    .withClientConfiguration(s3ClientConfig)
-    .withCredentials(assumeRoleProvider)
-    .withRegion("eu-west-1")
-    .build()
-```
-
-In `build.sbt`:
-```bash
-"com.amazonaws" % "aws-java-sdk-sts" % "1.11.457"
-```
+2. Setup LocalMain with the needed dates to process/backfill. 
+3. Run LocalMain (with required environment variables from the top.) 

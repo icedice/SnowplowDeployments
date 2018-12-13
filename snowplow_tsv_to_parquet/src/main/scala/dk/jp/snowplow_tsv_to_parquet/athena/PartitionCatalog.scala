@@ -3,15 +3,14 @@ package dk.jp.snowplow_tsv_to_parquet.athena
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import com.amazonaws.services.athena.AmazonAthena
 import com.amazonaws.services.athena.model._
-import com.amazonaws.services.athena.{AmazonAthena, AmazonAthenaClientBuilder}
 import dk.jp.snowplow_tsv_to_parquet.util.OutputPathPartitions
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 
 object PartitionCatalog {
-  lazy val client: AmazonAthena = AmazonAthenaClientBuilder.defaultClient()
   private val logger = LoggerFactory.getLogger("PartitionCatalog")
 
   /**
@@ -19,7 +18,8 @@ object PartitionCatalog {
     * exactly which partitions we would like to add so we don't need the features of a Glue Crawler.
     * If the partitions gets messed up for some reason, we can run a Glue Crawler to get back on track.
     */
-  def addPartitions(parts: Seq[OutputPathPartitions], bucket: String, partitionDatabase: String, athenaOutputLocation: String): Unit = {
+  def addPartitions(parts: Seq[OutputPathPartitions], bucket: String, partitionDatabase: String, athenaOutputLocation: String,
+                    client: AmazonAthena): Unit = {
     if (parts.isEmpty) {
       return
     }
@@ -38,7 +38,7 @@ object PartitionCatalog {
 
     val res = client.startQueryExecution(req)
 
-    waitForQueryToComplete(res)
+    waitForQueryToComplete(client, res)
   }
 
   private def getQueryString(parts: Seq[OutputPathPartitions], bucket: String): String = {
@@ -52,7 +52,7 @@ object PartitionCatalog {
     f"PARTITION (event = '${part.event}', `date` = '${dt.toLocalDate.toString}', hour = ${dt.getHour}%02d) LOCATION '$location'"
   }
 
-  private def waitForQueryToComplete(res: StartQueryExecutionResult): Unit = {
+  private def waitForQueryToComplete(client: AmazonAthena, res: StartQueryExecutionResult): Unit = {
     val getQueryExecutionRequest = new GetQueryExecutionRequest().withQueryExecutionId(res.getQueryExecutionId)
 
     val sleepBetweenChecks = 500L
