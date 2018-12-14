@@ -5,11 +5,14 @@ import java.util.zip.GZIPInputStream
 
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsRequest
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class S3Extension(s3: AmazonS3) {
+
+  private val logger = LoggerFactory.getLogger("S3Extension")
 
   private def getAllKeys(bucket: String, prefix: String): Seq[String] = {
     var listObjects = s3.listObjects(bucket, prefix)
@@ -27,6 +30,7 @@ class S3Extension(s3: AmazonS3) {
   }
 
   private def getObjContent(bucket: String, key: String): InputStream = {
+    logger.info(s"About to download $bucket/$key")
     val obj = s3.getObject(bucket, key)
     new GZIPInputStream(obj.getObjectContent)
   }
@@ -37,8 +41,9 @@ class S3Extension(s3: AmazonS3) {
     * keep connections to the current 'batch' of streams open while still allowing us to process the 'batch' in parallel.
     */
   def getContent(bucket: String, prefix: String, batchSize: Int): Iterator[Seq[InputStream]] = {
-    getAllKeys(bucket, prefix)
-      .grouped(batchSize)
+    val allKeys = getAllKeys(bucket, prefix)
+    logger.info(s"All keys is: $allKeys")
+    allKeys.grouped(batchSize)
       .map(_.map(getObjContent(bucket, _)))
   }
 
