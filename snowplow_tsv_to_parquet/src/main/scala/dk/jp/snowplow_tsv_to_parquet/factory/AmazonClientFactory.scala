@@ -10,9 +10,11 @@ object AmazonClientFactory {
   // Up the socket timeout to avoid "Connection reset" errors due to long living connections.
   private val socketTimeout = 15 * 60 * 1000 // 15 minutes.
   private val maxConnections = 100
+  private val maxErrorRetry = 15
   private val s3ClientConfig = new ClientConfiguration()
     .withMaxConnections(maxConnections)
     .withSocketTimeout(socketTimeout)
+    .withMaxErrorRetry(maxErrorRetry)
 
   def createAthenaClient(): AmazonAthena = {
     AmazonAthenaClientBuilder.defaultClient()

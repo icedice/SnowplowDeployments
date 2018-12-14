@@ -10,7 +10,7 @@ mainClass in Compile := Some("dk.jp.snowplow_tsv_to_parquet.Main")
 
 val parquetVersion = "1.10.0"
 val hadoopVersion = "3.1.0"
-val awsVersion = "1.11.467"
+val awsVersion = "1.11.468"
 
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-log4j12" % "1.7.25",
