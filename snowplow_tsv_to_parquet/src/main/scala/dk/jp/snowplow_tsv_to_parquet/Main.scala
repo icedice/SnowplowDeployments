@@ -41,6 +41,7 @@ object Main {
     inStreamBatches.foreach { inStreams =>
       logger.info(s"Found ${inStreams.size} keys in prefix $prefix...")
       processBatch(inStreams, sink, dtToProcess)
+      inStreams.foreach(_.close())
     }
 
     logger.info("Closing sink and finalizing writing files to local storage...")
