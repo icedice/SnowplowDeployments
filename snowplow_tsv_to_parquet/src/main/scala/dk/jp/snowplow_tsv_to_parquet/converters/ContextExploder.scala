@@ -72,7 +72,7 @@ object ContextExploder {
     val anonId = (userCtx \ "anon_id").getAs[String]
     val userId = (userCtx \ "user_id").getAs[String].filter(_ != "anon")
     val authorized = (userCtx \ "user_authorized").getAs[String].map(_ == "yes")
-    val corpId = (userCtx \ "corp_id").getAs[String]
+    val corpId = (userCtx \ "corp_id").getAs[String].filter(_ != "NOTSET")
     User(anonId, userId, authorized, corpId)
   }
 
