@@ -8,7 +8,7 @@ import scala.util.Try
 
 private case class Pageview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean])
 private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean])
-private case class User(anonId: Option[String], userId: Option[String], authorized: Option[Boolean])
+private case class User(anonId: Option[String], userId: Option[String], authorized: Option[Boolean], corpId: Option[String])
 private case class WebPage(id: Option[String])
 
 object ContextExploder {
@@ -24,13 +24,14 @@ object ContextExploder {
     val pv = findContext(wrappers, "iglu:dk.jyllands-posten/page_view/") map extractPageview getOrElse Pageview(None, None, None, None)
     val nasv = findContext(wrappers, "iglu:dk.jyllands-posten/native_app_screen_view/") map extractNativeAppScreenView getOrElse NativeAppScreenview(None, None, None, None)
 
-    val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None)
+    val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None, None)
     val webPage = findContext(wrappers, "iglu:com.snowplowanalytics.snowplow/web_page/") map extractWebPage getOrElse WebPage(None)
 
     val additionalFields: Seq[_ >: AnyRef] = Seq(
       user.anonId.orNull,
       user.userId.orNull,
       user.authorized.orNull,
+      user.corpId.orNull,
       //Use pageview first, if that has empty options, use native app screen view to populate the
       //additional fields
       pv.site.orElse(nasv.site).orNull,
@@ -71,7 +72,8 @@ object ContextExploder {
     val anonId = (userCtx \ "anon_id").getAs[String]
     val userId = (userCtx \ "user_id").getAs[String].filter(_ != "anon")
     val authorized = (userCtx \ "user_authorized").getAs[String].map(_ == "yes")
-    User(anonId, userId, authorized)
+    val corpId = (userCtx \ "corp_id").getAs[String]
+    User(anonId, userId, authorized, corpId)
   }
 
   private def extractWebPage(userCtx: JValue): WebPage = WebPage((userCtx \ "id").getAs[String])
