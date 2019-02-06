@@ -32,4 +32,25 @@ AWS_ASSUME_ROLE_ARN=arnForProdDeveloperRole
 AWS_ROLE_SESSION_NAME=yourOwnSessionName
 ```
 2. Setup LocalMain with the needed dates to process/backfill. 
-3. Run LocalMain (with required environment variables from the top.) 
+3. Run LocalMain (with required environment variables from the top.)
+
+# Backfilling using Airflow
+SSH into the ECS/EC2 machine running the Airflow Docker container and execute an Airflow CLI command inside the Docker container.
+
+```bash
+# SSH into the ECS machine.
+ssh -i "XXX.pem" ec2-user@YYY
+# Find the name or the container id of the Airflow container.
+docker ps
+# Start a bash shell inside the container.
+docker exec -it ecs-Test-airflow-ZZZ /bin/bash
+# Execute Airflow CLI clear command.
+airflow clear ...
+```
+
+For example, the following command will clear the `snowplow_tsv_to_parquet` task (and not its upstream or downstream tasks) of the `snowplow_tsv_to_parquet` DAG for a given time range. The CLI will ask for confirmation but you can skip that by adding `--no_confirm`.
+```bash
+airflow clear -t snowplow_tsv_to_parquet -s 2019-02-05T00:00:00 -e 2019-02-06T00:00:00 snowplow_tsv_to_parquet
+```
+
+Note that Airflow uses an obscene amount of memory to keep track of scheduled and running tasks, so it will probably crash if you clear, for example, a day's worth of tasks. You can partly get around this by increasing Airflow's memory reservation in ECS.
