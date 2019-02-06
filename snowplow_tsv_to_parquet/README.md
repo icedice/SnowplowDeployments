@@ -16,15 +16,14 @@ The default settings for the Scala Compile Server in IntelliJ IDEA will result i
 
 # Adding new columns to Athena/Glue
 After adding a new column to the ContextExploder and Schemas, go to AWS Glue, select your database and table, and choose Edit Schema.
-As we're using parquet files (read by name, default), you can freely add columns anywhere in the table. The new column will push the old ones, so what used to be 124 will now be 125 in this case.
+As we're using parquet files (read by name, default), you can freely add columns anywhere in the table. The new column will push the old ones, so what used to be 124 will now be 125 in the example below.
 
 The new column will be queryable if the data exists, otherwise it won't return anything. The rest of the table will work as expected either way.
 
-You can choose to disable the tsv-to-parquet task on AirFlow while updating the schema, to ensure no tasks are running while the change is going through.
+You can choose to disable the tsv-to-parquet task on Airflow while updating the schema, to ensure no tasks are running while the change is going through.
 ![AWS Glue Adding Columns](readme_aws_glue_add_column.png "AWS Glue Adding Columns")
 
 # Backfilling using IntelliJ IDEA
-
 If backfilling of snowplow-tsv-to-parquet is needed, following should be done:
 
 1. Set environment variables

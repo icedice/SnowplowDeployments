@@ -156,12 +156,14 @@ private object SchemaHelper {
   val additionalOutFields: Seq[(FieldType, String)] = Seq(
     (StringFieldType(), "anon_id"),
     (StringFieldType(), "user_id"),
+    (BooleanFieldType(), "user_authenticated"),
     (BooleanFieldType(), "user_authorized"),
     (StringFieldType(), "corp_id"),
     (StringFieldType(), "site"),
     (IntFieldType(), "content_id"),
     (IntFieldType(), "section_id"),
     (BooleanFieldType(), "page_restricted"),
+    (StringFieldType(), "page_restricted_type"),
     (StringFieldType(), "web_page_id")
   )
 
