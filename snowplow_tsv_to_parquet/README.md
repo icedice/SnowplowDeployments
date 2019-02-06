@@ -53,4 +53,4 @@ For example, the following command will clear the `snowplow_tsv_to_parquet` task
 airflow clear -t snowplow_tsv_to_parquet -s 2019-02-05T00:00:00 -e 2019-02-06T00:00:00 snowplow_tsv_to_parquet
 ```
 
-Note that Airflow uses an obscene amount of memory to keep track of scheduled and running tasks, so it will probably crash if you clear, for example, a day's worth of tasks. You can partly get around this by increasing Airflow's memory reservation in ECS.
+Note that Airflow uses a lot of memory to keep track of running tasks. On Test where up to 10 tasks can run at a time, it stabilized itself at ~1200 MB of memory. Increase the memory reservation if Airflow crashes, especially if you increase the number of tasks that are allowed to run at a time.
