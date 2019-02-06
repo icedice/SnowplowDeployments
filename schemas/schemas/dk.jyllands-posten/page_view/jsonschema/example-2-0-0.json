@@ -5,8 +5,8 @@
         "content_type": "default",
         "page_name": "jplive.forside.sec",
         "page_type": "sec",
-        "page_restricted":"no",
-        "page_restricted_type":"free",
+        "page_restricted":"yes",
+        "page_restricted_type":"register",
         "site":"test.dk",
         "sub_site":"premium",
         "editorial_category": "sport"
