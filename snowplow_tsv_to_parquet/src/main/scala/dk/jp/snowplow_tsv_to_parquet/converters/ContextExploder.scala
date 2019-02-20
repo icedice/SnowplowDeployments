@@ -8,7 +8,8 @@ import scala.util.Try
 
 private case class Pageview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
 private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
-private case class User(anonId: Option[String], userId: Option[String], authenticated: Option[Boolean], authorized: Option[Boolean], corpId: Option[String])
+private case class Group(authenticated: Option[Boolean], authorized: Option[Boolean], corpId: Option[String])
+private case class User(anonId: Option[String], userId: Option[String], authenticated: Option[Boolean], authorized: Option[Boolean], group: Group)
 private case class WebPage(id: Option[String])
 
 object ContextExploder {
@@ -24,7 +25,7 @@ object ContextExploder {
     val pv = findContext(wrappers, "iglu:dk.jyllands-posten/page_view/") map extractPageview getOrElse Pageview(None, None, None, None, None)
     val nasv = findContext(wrappers, "iglu:dk.jyllands-posten/native_app_screen_view/") map extractNativeAppScreenView getOrElse NativeAppScreenview(None, None, None, None, None)
 
-    val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None, None, None)
+    val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None, None, Group(None, None, None))
     val webPage = findContext(wrappers, "iglu:com.snowplowanalytics.snowplow/web_page/") map extractWebPage getOrElse WebPage(None)
 
     val additionalFields: Seq[_ >: AnyRef] = Seq(
@@ -32,7 +33,9 @@ object ContextExploder {
       user.userId.orNull,
       user.authenticated.orNull,
       user.authorized.orNull,
-      user.corpId.orNull,
+      user.group.authenticated.orNull,
+      user.group.authorized.orNull,
+      user.group.corpId.orNull,
 
       // Use page view first, if that has empty options, use native app screen view to populate the additional fields.
       pv.site.orElse(nasv.site).orNull,
@@ -76,10 +79,15 @@ object ContextExploder {
   private def extractUser(userCtx: JValue): User = {
     val anonId = (userCtx \ "anon_id").getAs[String]
     val userId = (userCtx \ "user_id").getAs[String].filter(_ != "anon")
-    val authenticated = (userCtx \ "user_authenticated").getAs[String].map(_ == "yes")
-    val authorized = (userCtx \ "user_authorized").getAs[String].map(_ == "yes")
+    val userAuthenticated = (userCtx \ "user_authenticated").getAs[String].map(_ == "yes")
+    val userAuthorized = (userCtx \ "user_authorized").getAs[String].map(_ == "yes")
+
+    val grpAuthenticated = (userCtx \ "grp_authenticated").getAs[String].map(_ == "yes")
+    val grpAuthorized = (userCtx \ "grp_authorized").getAs[String].map(_ == "yes")
     val corpId = (userCtx \ "corp_id").getAs[String].filter(_ != "NOTSET")
-    User(anonId, userId, authenticated, authorized, corpId)
+    val group = Group(grpAuthenticated, grpAuthorized, corpId)
+
+    User(anonId, userId, userAuthenticated, userAuthorized, group)
   }
 
   private def extractWebPage(userCtx: JValue): WebPage = WebPage((userCtx \ "id").getAs[String])

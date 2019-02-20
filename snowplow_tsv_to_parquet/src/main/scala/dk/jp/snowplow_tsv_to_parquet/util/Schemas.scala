@@ -158,6 +158,8 @@ private object SchemaHelper {
     (StringFieldType(), "user_id"),
     (BooleanFieldType(), "user_authenticated"),
     (BooleanFieldType(), "user_authorized"),
+    (BooleanFieldType(), "grp_authenticated"),
+    (BooleanFieldType(), "grp_authorized"),
     (StringFieldType(), "corp_id"),
     (StringFieldType(), "site"),
     (IntFieldType(), "content_id"),
