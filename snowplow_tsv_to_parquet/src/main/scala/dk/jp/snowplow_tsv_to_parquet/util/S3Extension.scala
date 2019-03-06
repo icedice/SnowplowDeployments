@@ -42,7 +42,7 @@ class S3Extension(s3: AmazonS3) {
     */
   def getContent(bucket: String, prefix: String, batchSize: Int): Iterator[Seq[InputStream]] = {
     val allKeys = getAllKeys(bucket, prefix)
-    logger.info(s"All keys is: $allKeys")
+    logger.info(s"All keys are: $allKeys")
     allKeys.grouped(batchSize)
       .map(_.map(getObjContent(bucket, _)))
   }

@@ -20,7 +20,9 @@ private object SchemaHelper {
     (StringFieldType(), "platform"),
     (TimestampFieldType(), "etl_tstamp"),
     (TimestampFieldType(), "collector_tstamp"),
-    (TimestampFieldType(), "dvce_created_tstamp"),
+    // We can't trust the client's time stamps so if it is not a valid date (for example, we have seen events from year
+    // 16517), set it to null.
+    (TimestampFieldType(setNullIfNotParsable = true), "dvce_created_tstamp"),
     // This is actually called "event", however, we use it as a partition column and to avoid a "duplicate whatever"
     // warning, we simply rename the version of the column that is stored in the file. If using e.g. Spark to save the
     // data it will automatically remove the partition column from the file, however, when using parquet-mr like we do,
@@ -139,9 +141,11 @@ private object SchemaHelper {
     (StringFieldType(), "mkt_clickid"),
     (StringFieldType(), "mkt_network"),
     (StringFieldType(), "etl_tags"),
-    (TimestampFieldType(), "dvce_sent_tstamp"),
+    // As with dvce_created_tstamp.
+    (TimestampFieldType(setNullIfNotParsable = true), "dvce_sent_tstamp"),
     (StringFieldType(), "refr_domain_userid"),
-    (TimestampFieldType(), "refr_device_tstamp"),
+    // As with dvce_created_tstamp.
+    (TimestampFieldType(setNullIfNotParsable = true), "refr_device_tstamp"),
     (StringFieldType(), "derived_contexts"),
     (StringFieldType(), "domain_sessionid"),
     (TimestampFieldType(), "derived_tstamp"),
@@ -185,7 +189,12 @@ private object SchemaHelper {
         case BooleanFieldType() => acc.optionalBoolean(fieldName)
         case LongFieldType() => acc.optionalLong(fieldName)
         case DoubleFieldType() => acc.optionalDouble(fieldName)
-        case TimestampFieldType() => acc.optionalTsMillis(fieldName)
+        case TimestampFieldType(allowNullIfNotParsable) =>
+          if (allowNullIfNotParsable) {
+            acc.optionalTsMillisSetNullIfNotParsable(fieldName)
+          } else {
+            acc.optionalTsMillis(fieldName)
+          }
       }
     }
 
@@ -203,6 +212,17 @@ private class FieldAssemblerTsMillis(assembler: FieldAssembler[Schema]) {
   private val optionalTsMillisType = SchemaBuilder unionOf() nullType() and() `type` tsMillis endUnion()
 
   def optionalTsMillis(name: String): FieldAssembler[Schema] = assembler.name(name).`type`(optionalTsMillisType).withDefault(null)
+
+  private val tsMillisSetNullIfNotParsable = LogicalTypes.timestampMillis.addToSchema(Schema.create(Schema.Type.LONG))
+  // Add a flag to the schema's properties to let the parser know that the timestamp can be set to null if not valid.
+  tsMillisSetNullIfNotParsable.addProp("setNullIfNotParsable".intern(), true)
+  private val optionalTsMillisSetNullIfNotParsableType = SchemaBuilder unionOf() nullType() and() `type` tsMillisSetNullIfNotParsable endUnion()
+
+  /**
+    * Allow the timestamp to be unparsable and in that case, set it to null. Can be used for client information that we
+    * can't fully control such as client timestamps which can be changed by the client and can't be trusted anyway.
+    */
+  def optionalTsMillisSetNullIfNotParsable(name: String): FieldAssembler[Schema] = assembler.name(name).`type`(optionalTsMillisSetNullIfNotParsableType).withDefault(null)
 }
 
 /**
@@ -214,4 +234,7 @@ private case class IntFieldType() extends FieldType
 private case class LongFieldType() extends FieldType
 private case class BooleanFieldType() extends FieldType
 private case class DoubleFieldType() extends FieldType
-private case class TimestampFieldType() extends FieldType
+/**
+  * @param setNullIfNotParsable If the timestamp is not valid, set the field's value to null.
+  */
+private case class TimestampFieldType(setNullIfNotParsable: Boolean = false) extends FieldType
