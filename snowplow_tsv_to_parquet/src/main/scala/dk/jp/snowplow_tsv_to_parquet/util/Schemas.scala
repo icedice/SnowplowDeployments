@@ -12,6 +12,8 @@ object Schemas {
     */
   val in: Schema = SchemaHelper.buildSchema("Event", SchemaHelper.inFields)
   val out: Schema = SchemaHelper.buildSchema("Event", SchemaHelper.inFields ++ SchemaHelper.additionalOutFields)
+
+  val inFieldNameToIdx: Map[String, Int] = SchemaHelper.inFields.map(_._2).zipWithIndex.toMap
 }
 
 private object SchemaHelper {

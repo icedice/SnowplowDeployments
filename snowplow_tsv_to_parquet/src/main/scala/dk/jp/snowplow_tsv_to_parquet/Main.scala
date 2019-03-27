@@ -12,6 +12,7 @@ import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
 import dk.jp.snowplow_tsv_to_parquet.sources.TsvSource
 import dk.jp.snowplow_tsv_to_parquet.util.{S3Extension, Schemas}
+import filters.FilterRows
 import org.apache.avro.generic.GenericData
 import org.slf4j.LoggerFactory
 
@@ -75,8 +76,11 @@ object Main {
     logger.info(s"Reading raw event file..")
     val input = TsvSource.read(ls, Schemas.in)
 
+    logger.info(s"Filtering user agents..")
+    val filteredEvents = FilterRows.filterRows(input)
+
     logger.info(s"Exploding contexts..")
-    val explodedInput = ContextExploder.explodeContexts(input)
+    val explodedInput = ContextExploder.explodeContexts(filteredEvents)
 
     logger.info(s"Converting events to Avro..")
     TsvToAvroConverter.convert(explodedInput, Schemas.out)

@@ -1,5 +1,6 @@
 package dk.jp.snowplow_tsv_to_parquet.converters
 
+import dk.jp.snowplow_tsv_to_parquet.util.Schemas
 import org.json4s.DefaultReaders._
 import org.json4s._
 import org.json4s.native.JsonMethods._
@@ -18,7 +19,7 @@ object ContextExploder {
   }
 
   private def explodeContexts(event: Array[Any]): Array[Any] = {
-    val ctxsField = event(52).asInstanceOf[String]
+    val ctxsField = event(Schemas.inFieldNameToIdx("contexts")).asInstanceOf[String]
     val wrappers = Try((parse(ctxsField) \ "data").asInstanceOf[JArray].arr).getOrElse(List[JValue]())
 
     // Find the page_view/native_app_screen_view, user and web_page contexts. There should only ever be one of each per page view event.
