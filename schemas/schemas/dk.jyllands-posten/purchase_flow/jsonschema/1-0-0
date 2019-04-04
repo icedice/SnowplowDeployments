@@ -1,0 +1,46 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-1#",
+    "description": "Schema for an event signifying a step in a purchase flow. Follows the structure defined for GA events.",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "purchase_flow",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "uri": {
+            "type": "string"
+        },
+        "site": {
+            "type": "string"
+        },
+        "status": {
+            "type": "string"
+        },
+        "source": {
+            "type": "string"
+        },
+        "product_id": {
+            "type": "string"
+        },
+        "previous_step": {
+            "type": "string"
+        },
+        "anon_id": {
+            "type": "string",
+            "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
+        },
+        "user_id": {
+            "type": "string",
+            "pattern": "^([0-9,a-z]{8}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{4}-[0-9,a-z]{12})$"
+        }
+    },
+    "required": [
+        "uri",
+        "site",
+        "product_id",
+        "previous_step",
+        "anon_id"
+    ]
+}
