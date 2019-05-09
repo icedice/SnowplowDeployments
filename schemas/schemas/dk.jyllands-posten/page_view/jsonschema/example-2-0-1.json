@@ -1,0 +1,14 @@
+{
+        "section_id": 1,
+        "section_name": "Forside",
+        "section_path_id": [479, 1072],
+        "content_id": 1234567,
+        "content_type": "default",
+        "page_name": "jplive.forside.sec",
+        "page_type": "sec",
+        "page_restricted":"yes",
+        "page_restricted_type":"register",
+        "site":"test.dk",
+        "sub_site":"premium",
+        "editorial_category": "sport"
+}
