@@ -16,7 +16,7 @@
             "type": "array",
             "items": {
                 "type": "integer",
-                "minimum": 0,
+                "minimum": 0
             }
         },
         "section_name": {
