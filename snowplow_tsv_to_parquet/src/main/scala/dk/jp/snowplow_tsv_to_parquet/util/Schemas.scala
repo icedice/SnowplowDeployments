@@ -170,6 +170,8 @@ private object SchemaHelper {
     (StringFieldType(), "site"),
     (IntFieldType(), "content_id"),
     (IntFieldType(), "section_id"),
+    (StringFieldType(), "section_name"),
+    (StringFieldType(), "section_path_id"),
     (BooleanFieldType(), "page_restricted"),
     (StringFieldType(), "page_restricted_type"),
     (StringFieldType(), "web_page_id")

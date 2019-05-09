@@ -7,7 +7,7 @@ import org.json4s.native.JsonMethods._
 
 import scala.util.Try
 
-private case class Pageview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
+private case class Pageview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], sectionName: Option[String], sectionPathId: Option[String], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
 private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
 private case class Group(authenticated: Option[Boolean], authorized: Option[Boolean], corpId: Option[String])
 private case class User(anonId: Option[String], userId: Option[String], authenticated: Option[Boolean], authorized: Option[Boolean], group: Group)
@@ -23,7 +23,7 @@ object ContextExploder {
     val wrappers = Try((parse(ctxsField) \ "data").asInstanceOf[JArray].arr).getOrElse(List[JValue]())
 
     // Find the page_view/native_app_screen_view, user and web_page contexts. There should only ever be one of each per page view event.
-    val pv = findContext(wrappers, "iglu:dk.jyllands-posten/page_view/") map extractPageview getOrElse Pageview(None, None, None, None, None)
+    val pv = findContext(wrappers, "iglu:dk.jyllands-posten/page_view/") map extractPageview getOrElse Pageview(None, None, None, None, None, None, None)
     val nasv = findContext(wrappers, "iglu:dk.jyllands-posten/native_app_screen_view/") map extractNativeAppScreenView getOrElse NativeAppScreenview(None, None, None, None, None)
 
     val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None, None, Group(None, None, None))
@@ -42,6 +42,8 @@ object ContextExploder {
       pv.site.orElse(nasv.site).orNull,
       pv.contentId.orElse(nasv.contentId).orNull,
       pv.sectionId.orElse(nasv.sectionId).orNull,
+      pv.sectionName.orNull,
+      pv.sectionPathId.orNull,
       pv.pageRestricted.orElse(nasv.pageRestricted).orNull,
       pv.pageRestrictedType.orElse(nasv.pageRestrictedType).orNull,
 
@@ -63,9 +65,13 @@ object ContextExploder {
     val site = (pvCtx \ "site").getAs[String]
     val contentId = (pvCtx \ "content_id").getAs[Int]
     val sectionId = (pvCtx \ "section_id").getAs[Int]
+    val sectionName = (pvCtx \ "section_name").getAs[String]
+    // For legacy reasons we output the section path id as a "_" separated list of ids. For example, [1, 2, 3] becomes
+    // "1_2_3".
+    val sectionPathId = (pvCtx \ "section_path_id").getAs[Seq[Int]].map(_.mkString("_"))
     val pageRestricted = (pvCtx \ "page_restricted").getAs[String].map(_ == "yes")
     val pageRestrictedType = (pvCtx \ "page_restricted_type").getAs[String]
-    Pageview(site, contentId, sectionId, pageRestricted, pageRestrictedType)
+    Pageview(site, contentId, sectionId, sectionName, sectionPathId, pageRestricted, pageRestrictedType)
   }
 
   private def extractNativeAppScreenView(nasvCtx: JValue): NativeAppScreenview = {

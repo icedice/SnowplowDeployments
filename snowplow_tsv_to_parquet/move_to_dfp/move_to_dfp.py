@@ -64,7 +64,8 @@ def drop_columns(table: pa.Table) -> pa.Table:
      'refr_urlquery', 'refr_urlfragment', 'refr_medium', 'refr_source', 'refr_term', 'mkt_medium', 'mkt_source',
      'mkt_term', 'mkt_content', 'mkt_campaign', 'mkt_clickid', 'mkt_network', 'useragent', 'br_name', 'br_family',
      'br_version', 'os_name', 'os_family', 'dvce_type', 'domain_sessionid', 'derived_tstamp', 'anon_id', 'user_id',
-     'user_authorized', 'grp_authorized', 'site', 'content_id', 'section_id', 'page_restricted', 'web_page_id'])
+     'user_authorized', 'grp_authorized', 'site', 'content_id', 'section_id', 'section_name', 'section_path_id',
+     'page_restricted', 'web_page_id'])
 
     to_drop = set(c.name for c in table.columns) - col_whitelist
     return table.drop(to_drop)
