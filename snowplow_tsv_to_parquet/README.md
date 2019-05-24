@@ -23,7 +23,9 @@ The new column will be queryable if the data exists, otherwise it won't return a
 You can choose to disable the tsv-to-parquet task on Airflow while updating the schema, to ensure no tasks are running while the change is going through.
 ![AWS Glue Adding Columns](readme_aws_glue_add_column.png "AWS Glue Adding Columns")
 
-# Backfilling using AWS Batch (https://aws.amazon.com/batch/)
+# Backfilling using AWS Batch 
+
+
 If backfilling of snowplow-tsv-to-parquet is needed. This method has no limitations. You can backfill years with no need to manually do anything. 
 This method adds a number of jobs to a queue in AWS Batch. AWS Batch maintains a computed cluster where the jobs in the queue is run. 
 The speed of the backfilling job is based on the maximum allowed number of VCPUs allow in the computed cluster and the number of jobs.
@@ -36,6 +38,7 @@ The script used to add the jobs to AWS Batch: trigger_backfill_on_aws_batch.py
 
 The script takes three parameters:
 
+```
 python3.6 trigger_backfill_on_aws_batch.py emvironment startdate enddate
 
 ex.
@@ -43,10 +46,14 @@ python3.6 trigger_backfill_on_aws_batch.py 'dev '2018-11-20' '2018-12-01'
 
 ex. prod
 {prod-script} terraform-prod python3.6 trigger_backfill_on_aws_batch.py 'prod' '2018-11-20' '2018-12-01'
+```
 
 The script prints weather or not adding the jobs to AWS Batch is a success.
 
 Now you can monitor the backfilling from the AWS Batch dashboard. This keeps and overview of the state of each job.
 If some of the jobs fail you can retry them from here. If multiple fail, you can remove them from the queue and run the script again.
 
-AWS console -> Batch
+![AWS Batch dashboard](readme_aws_batch_dashboard.png "AWS Batch dashboard")
+
+
+#####Dokumentation: https://aws.amazon.com/batch/
