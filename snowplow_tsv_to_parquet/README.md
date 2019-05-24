@@ -23,34 +23,30 @@ The new column will be queryable if the data exists, otherwise it won't return a
 You can choose to disable the tsv-to-parquet task on Airflow while updating the schema, to ensure no tasks are running while the change is going through.
 ![AWS Glue Adding Columns](readme_aws_glue_add_column.png "AWS Glue Adding Columns")
 
-# Backfilling using IntelliJ IDEA
-If backfilling of snowplow-tsv-to-parquet is needed, following should be done:
+# Backfilling using AWS Batch (https://aws.amazon.com/batch/)
+If backfilling of snowplow-tsv-to-parquet is needed. This method has no limitations. You can backfill years with no need to manually do anything. 
+This method adds a number of jobs to a queue in AWS Batch. AWS Batch maintains a computed cluster where the jobs in the queue is run. 
+The speed of the backfilling job is based on the maximum allowed number of VCPUs allow in the computed cluster and the number of jobs.
 
-1. Set environment variables
-```bash
-AWS_ASSUME_ROLE_ARN=arnForProdDeveloperRole
-AWS_ROLE_SESSION_NAME=yourOwnSessionName
-```
-2. Setup LocalMain with the needed dates to process/backfill. 
-3. Run LocalMain (with required environment variables from the top.)
+To added a job to queue you need to CD to /snowplow_tsv_to_parquet/src/main/scripts/
 
-# Backfilling using Airflow
-SSH into the ECS/EC2 machine running the Airflow Docker container and execute an Airflow CLI command inside the Docker container.
+You need python and boto3 to run this scripts. Start your virtual env and install requirements.
 
-```bash
-# SSH into the ECS machine.
-ssh -i "XXX.pem" ec2-user@YYY
-# Find the name or the container id of the Airflow container.
-docker ps
-# Start a bash shell inside the container.
-docker exec -it ecs-Test-airflow-ZZZ /bin/bash
-# Execute Airflow CLI clear command.
-airflow clear ...
-```
+The script used to add the jobs to AWS Batch: trigger_backfill_on_aws_batch.py
 
-For example, the following command will clear the `snowplow_tsv_to_parquet` task (and not its upstream or downstream tasks) of the `snowplow_tsv_to_parquet` DAG for a given time range. The CLI will ask for confirmation but you can skip that by adding `--no_confirm`.
-```bash
-airflow clear -t snowplow_tsv_to_parquet -s 2019-02-05T00:00:00 -e 2019-02-06T00:00:00 snowplow_tsv_to_parquet
-```
+The script takes three parameters:
 
-Note that Airflow uses a lot of memory to keep track of running tasks. On Test where up to 10 tasks can run at a time, it stabilized itself at ~1200 MB of memory. Increase the memory reservation if Airflow crashes, especially if you increase the number of tasks that are allowed to run at a time.
+python3.6 trigger_backfill_on_aws_batch.py emvironment startdate enddate
+
+ex.
+python3.6 trigger_backfill_on_aws_batch.py 'dev '2018-11-20' '2018-12-01'
+
+ex. prod
+{prod-script} terraform-prod python3.6 trigger_backfill_on_aws_batch.py 'prod' '2018-11-20' '2018-12-01'
+
+The script prints weather or not adding the jobs to AWS Batch is a success.
+
+Now you can monitor the backfilling from the AWS Batch dashboard. This keeps and overview of the state of each job.
+If some of the jobs fail you can retry them from here. If multiple fail, you can remove them from the queue and run the script again.
+
+AWS console -> Batch
