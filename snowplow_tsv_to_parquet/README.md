@@ -56,4 +56,4 @@ If some of the jobs fail you can retry them from here. If multiple fail, you can
 ![AWS Batch dashboard](readme_aws_batch_dashboard.png "AWS Batch dashboard")
 
 
-#####Dokumentation: https://aws.amazon.com/batch/
+Dokumentation: https://aws.amazon.com/batch/
