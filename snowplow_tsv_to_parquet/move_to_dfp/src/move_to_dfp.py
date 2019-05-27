@@ -141,7 +141,9 @@ def add_timespent(pvs: pd.DataFrame, date_to_process: date, hour_to_process: int
 def add_scroll_reach(pvs: pd.DataFrame, date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int)\
         -> pd.DataFrame:
     max_scroll_reach_per_pv = get_max_scroll_reach_values(date_to_process, hour_to_process, fs, threads)
-    return pvs.join(max_scroll_reach_per_pv, how='left')
+    joined = pvs.join(max_scroll_reach_per_pv, how='left')
+    joined['scroll_reach'] = joined['scroll_reach'].fillna(0.)
+    return joined
 
 
 def run(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int):
