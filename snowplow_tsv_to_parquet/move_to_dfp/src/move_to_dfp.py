@@ -43,8 +43,11 @@ def add_dt_cols(date_to_process: date, hour_to_process: int, table: pa.Table) ->
         .append_column(pa.Column.from_array('dt', dt))
 
 
-def add_brand_col(table: pa.Table) -> pa.Table:
-    brand = pd.Categorical(np.where(table.column('site').to_pandas() == 'jyllands-posten.dk', 'jp', 'erhvervsmedier'))
+def add_brand(table: pa.Table) -> pa.Table:
+    is_jp = table.column('app_id').to_pandas().str.endswith('jyllands-posten.dk')
+    brand = pd.Categorical(np.where(is_jp,
+                                    'jp',
+                                    'erhvervsmedier'))
     # noinspection PyCallByClass,PyTypeChecker
     return table.append_column(pa.Column.from_array('brand', brand))
 
@@ -79,7 +82,7 @@ def get_and_preprocess_pvs(date_to_process: date, hour_to_process: int, fs: S3Fi
     pvs = read_page_views(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
 
     logging.info('Adding brand...')
-    pvs = add_brand_col(pvs)
+    pvs = add_brand(pvs)
 
     logging.info('Adding date columns for use in partitioning...')
     pvs = add_dt_cols(date_to_process, hour_to_process, pvs)
@@ -89,7 +92,7 @@ def get_and_preprocess_pvs(date_to_process: date, hour_to_process: int, fs: S3Fi
 
     # The context column must be dropped before writing the output as it contains sensitive information (namely SSOid)
     # embedded in the JSON which is somewhat difficult for the DFP to hash.
-    pvs = pvs.drop(['contexts'])
+    pvs = pvs.drop(['app_id', 'contexts'])
 
     # For some reason, web_page_id is not guaranteed to be unique and actually rarely is.
     return pvs.to_pandas(use_threads=threads > 1)\
@@ -135,7 +138,7 @@ def add_timespent(pvs: pd.DataFrame, date_to_process: date, hour_to_process: int
     # Finally, calculate time spent. For pvs without pps, the result will be NaN.
     pvs_with_pps_per_pv['time_spent'] = pvs_with_pps_per_pv['page_pings'] * 30
 
-    return pvs_with_pps_per_pv
+    return pvs_with_pps_per_pv.drop(columns=['page_pings_enabled', 'page_pings'])
 
 
 def add_scroll_reach(pvs: pd.DataFrame, date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int)\
