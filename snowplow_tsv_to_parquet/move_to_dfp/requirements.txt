@@ -5,4 +5,3 @@ flake8-mypy==17.8.0
 pandas==0.24.2
 pytz==2019.1
 numpy==1.16.3
-memory-profiler==0.55.0

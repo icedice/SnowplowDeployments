@@ -9,7 +9,6 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytz
-from memory_profiler import profile
 from s3fs import S3FileSystem
 
 from input import read_page_views, read_page_pings, read_scroll_reach
@@ -92,7 +91,9 @@ def get_and_preprocess_pvs(date_to_process: date, hour_to_process: int, fs: S3Fi
     # embedded in the JSON which is somewhat difficult for the DFP to hash.
     pvs = pvs.drop(['contexts'])
 
-    return pvs.to_pandas(use_threads=threads > 1)
+    # For some reason, web_page_id is not guaranteed to be unique and actually rarely is.
+    return pvs.to_pandas(use_threads=threads > 1)\
+        .drop_duplicates('web_page_id')
 
 
 def get_pps_per_pv(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int) -> pd.Series:
@@ -128,7 +129,7 @@ def add_timespent(pvs: pd.DataFrame, date_to_process: date, hour_to_process: int
     pvs_with_pps_per_pv = pvs.join(pps_per_pv, how='left')
 
     # Pvs with pings enabled but without any page pings will be NaN in the joined DF. Set their number of pings to 0.
-    should_have_pps_but_has_not = pvs['page_pings_enabled'] & pvs_with_pps_per_pv['page_pings'].isna()
+    should_have_pps_but_has_not: pd.Series = pvs['page_pings_enabled'] & pvs_with_pps_per_pv['page_pings'].isna()
     pvs_with_pps_per_pv['page_pings'] = np.where(should_have_pps_but_has_not, 0, pvs_with_pps_per_pv['page_pings'])
 
     # Finally, calculate time spent. For pvs without pps, the result will be NaN.
@@ -143,7 +144,6 @@ def add_scroll_reach(pvs: pd.DataFrame, date_to_process: date, hour_to_process: 
     return pvs.join(max_scroll_reach_per_pv, how='left')
 
 
-@profile
 def run(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int):
     pvs = get_and_preprocess_pvs(date_to_process, hour_to_process, fs, threads)
 
