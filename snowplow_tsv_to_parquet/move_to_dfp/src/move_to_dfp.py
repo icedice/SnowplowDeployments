@@ -9,6 +9,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytz
+from memory_profiler import profile
 from s3fs import S3FileSystem
 
 from input import read_page_views, read_page_pings, read_scroll_reach
@@ -142,6 +143,7 @@ def add_scroll_reach(pvs: pd.DataFrame, date_to_process: date, hour_to_process: 
     return pvs.join(max_scroll_reach_per_pv, how='left')
 
 
+@profile
 def run(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int):
     pvs = get_and_preprocess_pvs(date_to_process, hour_to_process, fs, threads)
 
