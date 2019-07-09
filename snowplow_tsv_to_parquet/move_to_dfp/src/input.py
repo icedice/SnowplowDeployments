@@ -31,8 +31,8 @@ def read_page_views(s3_bucket: str, date_to_process: date, hour_to_process: int,
                      'refr_term', 'mkt_medium', 'mkt_source', 'mkt_term', 'mkt_content', 'mkt_campaign', 'mkt_clickid',
                      'mkt_network', 'useragent', 'br_name', 'br_family', 'br_version', 'os_name', 'os_family',
                      'dvce_type', 'domain_sessionid', 'derived_tstamp', 'anon_id', 'user_id', 'user_authorized',
-                     'grp_authorized', 'site', 'content_id', 'section_id', 'section_name', 'section_path_id',
-                     'page_restricted', 'web_page_id', 'contexts', 'app_id'}
+                     'grp_authorized', 'user_authenticated', 'grp_authenticated', 'site', 'content_id', 'section_id',
+                     'section_name', 'section_path_id', 'page_restricted', 'web_page_id', 'contexts', 'app_id'}
     return read_table(s3_bucket, 'page_view', date_to_process, hour_to_process, read_nthreads, fs, col_whitelist)
 
 
