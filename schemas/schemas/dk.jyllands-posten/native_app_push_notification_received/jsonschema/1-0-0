@@ -1,0 +1,28 @@
+{
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "description": "Schema for receiving a push notification for an article in a native app.",
+    "self": {
+        "vendor": "dk.jyllands-posten.snowplow",
+        "name": "native_app_push_notification_received",
+        "format": "jsonschema",
+        "version": "1-0-0"
+    },
+    "type": "object",
+    "properties": {
+        "article_id": {
+            "description": "Article id as a string.",
+            "type": "string"
+        },
+        "title": {
+            "description": "Push notification title.",
+            "type": "string"
+        },
+        "message": {
+            "description": "Push notification message.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "article_id",
+    ]
+}
