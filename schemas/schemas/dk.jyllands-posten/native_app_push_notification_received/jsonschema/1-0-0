@@ -20,9 +20,14 @@
         "message": {
             "description": "Push notification message.",
             "type": "string"
+        },
+        "site": {
+            "description": "The site (seriously).",
+            "type": "string"
         }
     },
     "required": [
         "article_id",
+        "site"
     ]
 }
