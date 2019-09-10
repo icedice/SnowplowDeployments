@@ -1,0 +1,35 @@
+{
+   "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+   "description": "Schema for access agreements",
+   "self": {
+      "vendor": "dk.jyllands-posten.snowplow",
+      "name": "access_agreements",
+      "format": "jsonschema",
+      "version": "1-0-0"
+   },
+   "type": "object",
+   "properties":  {
+      "access_agreements": {
+         "type": "array",
+         "minItems": 1,
+         "items": {
+            "type": "object",
+            "properties": {
+               "account_number": {
+                  "type": "string"
+               },
+               "id": {
+                  "type": "string"
+               }
+            },
+            "required": [
+               "account_number",
+               "id"
+            ]
+         }
+      }
+   },
+   "required": [
+      "access_agreements"
+   ]
+}
