@@ -45,16 +45,38 @@ collector {
     secure = true
   }
 
+  # Lets you specify a first-party cookie the Scala Stream Collector will be checking against.
+  # If it is present in the incoming requests, the collector will ignore them.
   doNotTrackCookie { # New section
     enabled = false
     name = cookie-name
-    value = cookie-value
+    value = cookie-value # Value can be regex
   }
 
+  # Allows you to customize what the collector sends back when the / route is reached
+   # Useful if you need to redirect to web content or privacy policies regarding the use of this collector.
   rootResponse {     # New section
     enabled = false
     statusCode = 200
     body = “ok”
+  }
+
+  # Configuration related to CORS preflight requests
+  cors {
+    # The Access-Control-Max-Age response header indicates how long the results of a preflight
+    # request can be cached. -1 seconds disables the cache. Chromium max is 10m, Firefox is 24h.
+     accessControlMaxAge = 5 seconds # -1 seconds disables the cache
+  }
+
+  # Configuration of prometheus http metrics
+  prometheusMetrics {
+    # If metrics are enabled then all requests will be logged as prometheus metrics
+    # and '/metrics' endpoint will return the report about the requests
+    enabled = true
+    durationBuckets = [0.1, 3, 10] # optional buckets by which to group by the `http_request_duration_seconds` metric
+    # Custom buckets for http_request_duration_seconds_bucket duration metric
+    #durationBucketsInSeconds = [0.1, 3, 10]
+    #durationbucketsInSeconds = ${?COLLECTOR_PROMETHEUS_METRICS_DURATION_BUCKETS_IN_SECONDS}
   }
 
   # When enabled and the cookie specified above is missing, performs a redirect to itself to check
