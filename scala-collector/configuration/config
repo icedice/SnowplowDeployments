@@ -41,8 +41,20 @@ collector {
   # We disable the crossdomain.xml route as we don't use Flash or anything like that.
   crossDomain {
     enabled = false
-    domain = ["*"]
+    domains = ["*"]
     secure = true
+  }
+
+  doNotTrackCookie { # New section
+    enabled = false
+    name = cookie-name
+    value = cookie-value
+  }
+
+  rootResponse {     # New section
+    enabled = false
+    statusCode = 200
+    body = “ok”
   }
 
   # When enabled and the cookie specified above is missing, performs a redirect to itself to check
