@@ -41,7 +41,7 @@ collector {
   # We disable the crossdomain.xml route as we don't use Flash or anything like that.
   crossDomain {
     enabled = false
-    domain = "*"
+    domain = ["*"]
     secure = true
   }
 
