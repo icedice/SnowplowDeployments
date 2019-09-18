@@ -35,6 +35,8 @@ collector {
     expiration = "365 days" # e.g. "365 days"
     # Network cookie name
     name = "jp"
+    secure = false
+    httpOnly = false  # set to true if you want to make the cookie inaccessible to non-HTTP requests
   }
 
   # Cross domain policy configuration. In R101, this configuration became mandatory.

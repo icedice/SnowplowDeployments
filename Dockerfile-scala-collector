@@ -1,7 +1,7 @@
 FROM scala-alpine
 LABEL maintainer="Asger Bachmann <asger.g.bachmann@jp.dk>"
 
-ENV VERSION="0.15.0"
+ENV VERSION="0.16.0"
 
 ENV ZIP_FILE_NAME="snowplow_scala_stream_collector_kinesis_${VERSION}.zip" \
     JAR_FILE_NAME="snowplow-stream-collector-kinesis-${VERSION}.jar"
