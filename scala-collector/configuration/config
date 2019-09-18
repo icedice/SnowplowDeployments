@@ -39,6 +39,12 @@ collector {
     httpOnly = false  # set to true if you want to make the cookie inaccessible to non-HTTP requests
   }
 
+  paths {
+  # "/com.acme/track" = "/com.snowplowanalytics.snowplow/tp2"
+  # "/com.acme/redirect" = "/r/tp2"
+  # "/com.acme/iglu" = "/com.snowplowanalytics.iglu/v1"
+  }
+
   # Cross domain policy configuration. In R101, this configuration became mandatory.
   # We disable the crossdomain.xml route as we don't use Flash or anything like that.
   crossDomain {
