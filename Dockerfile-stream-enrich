@@ -16,4 +16,4 @@ COPY ./stream-enrich/configuration/config /app/configuration/config
 COPY ./stream-enrich/configuration/resolver.json /app/configuration/resolver.json
 COPY ./stream-enrich/configuration/enrichments/ /app/configuration/enrichments/
 
-CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=debug /app/${JAR_FILE_NAME} --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
+CMD java -jar -Dorg.slf4j.simpleLogger.defaultLogLevel=info /app/${JAR_FILE_NAME} --config /app/configuration/config --resolver file:/app/configuration/resolver.json --enrichments file:/app/configuration/enrichments
