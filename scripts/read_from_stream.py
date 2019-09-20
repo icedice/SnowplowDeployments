@@ -13,11 +13,14 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
 
     iter_responses = [client.get_shard_iterator(StreamName=stream_name, ShardId=shard_id, ShardIteratorType=iterator_type) for shard_id in shard_ids]
     shard_iterators = [iter_response['ShardIterator'] for iter_response in iter_responses]
-    
+
     last_sequences = [None for _ in shard_iterators]
 
     while True:
         for i in range(len(shard_iterators)):
+            if shard_iterators[i] is None:
+                continue
+
             try:
                 record_response = client.get_records(ShardIterator=shard_iterators[i])
                 now = datetime.now()
@@ -27,7 +30,11 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
                     yield now, record['Data']
 
                 # Get the next iterator for the current shard from the response.
-                shard_iterators[i] = record_response['NextShardIterator']
+                if 'NextShardIterator' in record_response:
+                    shard_iterators[i] = record_response['NextShardIterator']
+                else:
+                    print(f'Shard {shard_ids[i]} closed.')
+                    shard_iterators[i] = None
             except botocore.exceptions.ClientError as err:
                 backoff_exceptions = ['ProvisionedThroughputExceededException', 'ThrottlingException']
                 if err.response['Error']['Code'] in backoff_exceptions:
@@ -35,7 +42,7 @@ def get_kinesis_data_iterator(stream_name, iterator_type):
                     time.sleep(5)
                 else:
                     raise err
-                    
+
         time.sleep(1)
 
 
@@ -48,7 +55,7 @@ def print_thrift(timestamp, data):
 
 if __name__ == '__main__':
     import sys
-    
+
     if len(sys.argv) > 1:
         stream_name = sys.argv[1]
     else:
