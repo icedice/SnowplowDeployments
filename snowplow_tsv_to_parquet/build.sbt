@@ -29,7 +29,8 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK...
   "com.amazonaws" % "aws-java-sdk-sts" % awsVersion, // Local running of this code requires STS
   "com.amazonaws" % "aws-java-sdk-athena" % awsVersion, // ... and the Athena SDK.
-  "org.json4s" %% "json4s-native" % "3.5.4"
+  "org.json4s" %% "json4s-native" % "3.5.4",
+  "javax.activation" % "activation" % "1.1.1"
 )
 
 dockerBaseImage := "openjdk:11-jre-slim"
