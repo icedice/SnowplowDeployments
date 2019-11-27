@@ -35,11 +35,7 @@ class AvroToParquetSink(schema: Schema) {
     val parts = OutputPathPartitions(event, dt)
     // Find or create a new ParquetWriter for the record's partition.
     val writer = writers.getOrElseUpdate(parts, newWriter(parts))
-    try {
-      writer.write(out)
-    } catch {
-      case e: Throwable => ???
-    }
+    writer.write(out)
   }
 
   /**
