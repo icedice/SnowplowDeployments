@@ -10,7 +10,13 @@ import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class S3Extension(s3: AmazonS3) {
+trait ObjectStorage {
+  def getContent(bucket: String, prefix: String, batchSize: Int): Iterator[Seq[InputStream]]
+
+  def putObject(bucket: String, parts: OutputPathPartitions): Unit
+}
+
+class S3ObjectStorage(s3: AmazonS3) extends ObjectStorage {
 
   private val logger = LoggerFactory.getLogger("S3Extension")
 
@@ -48,7 +54,7 @@ class S3Extension(s3: AmazonS3) {
   }
 
   def putObject(bucket: String, parts: OutputPathPartitions): Unit = {
-    s3.putObject(bucket, s"snowplow/${parts.getSavePath}", new File(s"/tmp/${parts.getSavePath}"))
+    s3.putObject(bucket, parts.getRemoteSavePath, new File(parts.getLocalSavePath))
   }
 
 }

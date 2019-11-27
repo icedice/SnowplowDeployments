@@ -58,3 +58,8 @@ Now you can monitor the backfilling from the AWS Batch dashboard. This keeps and
 If some of the jobs fail you can retry them from here. If multiple fail, you can remove them from the queue and run the script again.
 
 ![AWS Batch dashboard](readme_aws_batch_dashboard.png "AWS Batch dashboard")
+
+# Test resources modified on save
+IntelliJ has a weird setting where it will strip whitespace in files when you save. This is a problem when working with the test resources which may end in several tabs.
+
+If you touch the test resources with this setting enabled, the tests may fail. `CTRL+A` and search for `Strip trailing spaces on Save:` and set it to `None`.

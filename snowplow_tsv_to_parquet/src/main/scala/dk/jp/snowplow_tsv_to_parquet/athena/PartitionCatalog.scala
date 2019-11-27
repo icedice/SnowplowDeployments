@@ -10,16 +10,19 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 
-object PartitionCatalog {
-  private val logger = LoggerFactory.getLogger("PartitionCatalog")
+trait PartitionCatalog {
+  def addPartitions(parts: Seq[OutputPathPartitions], bucket: String): Unit
+}
+
+class AthenaPartitionCatalog(partitionDatabase: String, athenaOutputLocation: String, client: AmazonAthena) extends PartitionCatalog {
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
     * Use Athena to add partitions rather than a Glue Crawler. The Crawler will take a long time to run and we know
     * exactly which partitions we would like to add so we don't need the features of a Glue Crawler.
     * If the partitions gets messed up for some reason, we can run a Glue Crawler to get back on track.
     */
-  def addPartitions(parts: Seq[OutputPathPartitions], bucket: String, partitionDatabase: String, athenaOutputLocation: String,
-                    client: AmazonAthena): Unit = {
+  def addPartitions(parts: Seq[OutputPathPartitions], bucket: String): Unit = {
     if (parts.isEmpty) {
       return
     }
@@ -47,7 +50,7 @@ object PartitionCatalog {
   }
 
   private def getPartitionQuery(part: OutputPathPartitions, bucket: String): String = {
-    val location = s"s3://$bucket/snowplow/${part.getSaveDirectory}"
+    val location = s"s3://$bucket/${part.getRemoteSavePath}"
     val dt = part.dt
     f"PARTITION (event = '${part.event}', `date` = '${dt.toLocalDate.toString}', hour = ${dt.getHour}%02d) LOCATION '$location'"
   }

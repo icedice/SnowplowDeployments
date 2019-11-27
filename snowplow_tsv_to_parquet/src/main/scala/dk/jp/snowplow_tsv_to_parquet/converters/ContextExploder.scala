@@ -11,7 +11,7 @@ private case class Pageview(site: Option[String], contentId: Option[Int], sectio
 private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
 private case class Group(authenticated: Option[Boolean], authorized: Option[Boolean], corpId: Option[String])
 private case class User(anonId: Option[String], userId: Option[String], authenticated: Option[Boolean], authorized: Option[Boolean], group: Group)
-private case class AccessAgreements(ids: Seq[String], accounts: Seq[String])
+private case class AccessAgreements(accounts: Seq[String], ids: Seq[String])
 private case class WebPage(id: Option[String])
 
 object ContextExploder {

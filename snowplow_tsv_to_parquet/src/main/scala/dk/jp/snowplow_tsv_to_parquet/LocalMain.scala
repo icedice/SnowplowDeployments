@@ -4,7 +4,9 @@ import java.time.LocalDateTime
 
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider
 import dk.jp.snowplow_tsv_to_parquet.Main.run
+import dk.jp.snowplow_tsv_to_parquet.athena.AthenaPartitionCatalog
 import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
+import dk.jp.snowplow_tsv_to_parquet.util.S3ObjectStorage
 import org.slf4j.LoggerFactory
 
 /**
@@ -44,11 +46,12 @@ object LocalMain {
         (AmazonClientFactory.createS3Client(), AmazonClientFactory.createAthenaClient())
     }
 
-    //    (0 to 23).foreach { hour =>
     val dt = LocalDateTime.of(year, month, day, hour, 0)
     logger.info(s"Working with date $dt.")
-    run(inBucket, outBucket, dt, partitionDatabase, athenaOutputLocation, s3, athena)
-    //    }
+
+    val objStorage = new S3ObjectStorage(s3)
+    val partitionCatalog = new AthenaPartitionCatalog(partitionDatabase, athenaOutputLocation, athena)
+    run(inBucket, outBucket, dt, objStorage, partitionCatalog)
   }
 
 }

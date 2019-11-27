@@ -15,6 +15,8 @@ object AvroConverter {
     * Convert an individual row to Avro.
     */
   private def toAvro(in: Array[Any], schema: Schema): GenericData.Record = {
+    assert(in.length == schema.getFields.size(), "Unequal number of columns for event compared to schema.")
+
     val r = new GenericData.Record(schema)
     in.zipWithIndex.foreach { case (v, i) => r.put(i, v) }
     r

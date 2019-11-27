@@ -6,12 +6,12 @@ import java.time.format.DateTimeFormatter
 
 import com.amazonaws.services.athena.AmazonAthena
 import com.amazonaws.services.s3.AmazonS3
-import dk.jp.snowplow_tsv_to_parquet.athena.PartitionCatalog
-import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, AvroConverter}
+import dk.jp.snowplow_tsv_to_parquet.athena.{AthenaPartitionCatalog, PartitionCatalog}
+import dk.jp.snowplow_tsv_to_parquet.converters.{AvroConverter, ContextExploder}
 import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
 import dk.jp.snowplow_tsv_to_parquet.sources.TsvSource
-import dk.jp.snowplow_tsv_to_parquet.util.{S3Extension, Schemas}
+import dk.jp.snowplow_tsv_to_parquet.util.{ObjectStorage, S3ObjectStorage, Schemas}
 import dk.jp.snowplow_tsv_to_parquet.filters.FilterRows
 import org.apache.avro.generic.GenericData
 import org.slf4j.LoggerFactory
@@ -29,14 +29,12 @@ object Main {
   // The number of files to keep a connection in S3 open to at a time.
   private val inStreamBatchSize = parallelism * 3
 
-  private implicit def s3ToS3Extension(s3: AmazonS3): S3Extension = new S3Extension(s3)
-
-  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime, partitionDatabase: String, athenaOutputLocation: String,
-          s3: AmazonS3, athena: AmazonAthena): Unit = {
+  def run(inBucket: String, outBucket: String, dtToProcess: LocalDateTime,
+          objStorage: ObjectStorage, partitionCatalog: PartitionCatalog): Unit = {
     val prefix = getInputPrefix(dtToProcess)
     logger.info(s"Processing prefix $prefix...")
 
-    val inStreamBatches = s3.getContent(inBucket, prefix, inStreamBatchSize)
+    val inStreamBatches = objStorage.getContent(inBucket, prefix, inStreamBatchSize)
     val sink = new AvroToParquetSink(Schemas.out)
 
     inStreamBatches.foreach { inStreams =>
@@ -49,10 +47,10 @@ object Main {
     val partsWritten = sink.close()
 
     logger.info("Uploading file(s) to S3...")
-    partsWritten.par.foreach(s3.putObject(outBucket, _))
+    partsWritten.par.foreach(objStorage.putObject(outBucket, _))
 
     logger.info("Updating AWS Glue catalog partitions...")
-    PartitionCatalog.addPartitions(partsWritten, outBucket, partitionDatabase, athenaOutputLocation, athena)
+    partitionCatalog.addPartitions(partsWritten, outBucket)
 
     logger.info("Done.")
   }
@@ -113,7 +111,9 @@ object Main {
     val s3: AmazonS3 = AmazonClientFactory.createS3Client()
     val athena: AmazonAthena = AmazonClientFactory.createAthenaClient()
 
-    run(inBucket, outBucket, dt, partitionDatabase, athenaOutputLocation, s3, athena)
+    val objStorage = new S3ObjectStorage(s3)
+    val partitionCatalog = new AthenaPartitionCatalog(partitionDatabase, athenaOutputLocation, athena)
+    run(inBucket, outBucket, dt, objStorage, partitionCatalog)
   }
 
 }

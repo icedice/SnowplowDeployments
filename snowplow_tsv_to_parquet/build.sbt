@@ -15,6 +15,9 @@ val awsVersion = "1.11.468"
 libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-log4j12" % "1.7.25",
 
+  "org.scalatest" %% "scalatest" % "3.0.8" % Test,
+  "org.scalamock" %% "scalamock" % "4.4.0" % Test,
+
   "org.apache.parquet" % "parquet-common" % parquetVersion,
   "org.apache.parquet" % "parquet-encoding" % parquetVersion,
   "org.apache.parquet" % "parquet-column" % parquetVersion,
@@ -27,8 +30,8 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-aws" % hadoopVersion exclude("com.amazonaws", "aws-java-sdk-bundle"),
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion, // For some reason, hadoop-aws also requires the DynamoDB SDK.
   "com.amazonaws" % "aws-java-sdk-s3" % awsVersion, // Our code requires the S3 SDK...
-  "com.amazonaws" % "aws-java-sdk-sts" % awsVersion, // Local running of this code requires STS
   "com.amazonaws" % "aws-java-sdk-athena" % awsVersion, // ... and the Athena SDK.
+  "com.amazonaws" % "aws-java-sdk-sts" % awsVersion, // Local running of this code requires STS
   "org.json4s" %% "json4s-native" % "3.5.4",
   "javax.activation" % "activation" % "1.1.1"
 )

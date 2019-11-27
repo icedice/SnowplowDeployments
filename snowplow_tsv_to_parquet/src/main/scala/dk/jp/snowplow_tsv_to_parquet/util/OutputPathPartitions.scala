@@ -8,13 +8,17 @@ import java.time.format.DateTimeFormatter
   * when storing the data.
   */
 case class OutputPathPartitions(event: String, dt: LocalDateTime) {
-  def getSaveDirectory: String = {
+  private def getSaveDirectory: String = {
     val dtSuffix = dt.format(DateTimeFormatter.ofPattern("/'date'=yyyy-MM-dd/'hour'=HH"))
     s"event=$event$dtSuffix"
   }
 
-  def getSavePath: String = {
+  private def getSavePathSuffix: String = {
     val fileName = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.'pq'"))
     s"$getSaveDirectory/$fileName"
   }
+
+  def getLocalSavePath: String = s"/tmp/snowplow_tsv_to_parquet/$getSavePathSuffix"
+
+  def getRemoteSavePath: String = s"snowplow/$getSavePathSuffix"
 }
