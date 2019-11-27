@@ -1,4 +1,4 @@
-package filters
+package dk.jp.snowplow_tsv_to_parquet.filters
 
 import dk.jp.snowplow_tsv_to_parquet.util.Schemas
 

@@ -159,6 +159,9 @@ private object SchemaHelper {
     (TimestampFieldType(), "true_tstamp")
   )
 
+  /**
+    * Additional output columns extracted from the events' "context" JSON blob.
+    */
   val additionalOutFields: Seq[(FieldType, String)] = Seq(
     (StringFieldType(), "anon_id"),
     (StringFieldType(), "user_id"),
@@ -174,18 +177,22 @@ private object SchemaHelper {
     (StringFieldType(), "section_path_id"),
     (BooleanFieldType(), "page_restricted"),
     (StringFieldType(), "page_restricted_type"),
-    (StringFieldType(), "web_page_id")
+    (StringFieldType(), "web_page_id"),
+    (StringArrayFieldType(), "access_agreement_accounts"),
+    (StringArrayFieldType(), "access_agreement_ids")
   )
 
   /**
-    * This is more-or-less equivalent to calling SchemaBuilder.record("rec").fields().optionalString("field1").optionalInt("field2").endRecord()
-    * But with a variable number of fields.
+    * Construct an Avro schema from our internal [[FieldType]]s.
     */
   def buildSchema(name: String, fields: Seq[(FieldType, String)]): Schema = {
     val x = SchemaBuilder
       .record(name)
       .fields()
 
+    // This is more-or-less equivalent to calling
+    //   SchemaBuilder.record("rec").fields().optionalString("field1").optionalInt("field2").endRecord()
+    // with a variable number of fields.
     fields.foldLeft(x) { case (acc, (t, fieldName)) =>
       t match {
         case StringFieldType() => acc.optionalString(fieldName)
@@ -199,17 +206,19 @@ private object SchemaHelper {
           } else {
             acc.optionalTsMillis(fieldName)
           }
+        case StringArrayFieldType() => acc.optionalStringArray(fieldName)
       }
     }
 
     x.endRecord()
   }
 
-  private implicit def extendFieldAssembler(x: FieldAssembler[Schema]): FieldAssemblerTsMillis = new FieldAssemblerTsMillis(x)
+  private implicit def extendFieldAssemblerTsMillis(x: FieldAssembler[Schema]): FieldAssemblerTsMillis = new FieldAssemblerTsMillis(x)
+  private implicit def extendFieldAssemblerStringArray(x: FieldAssembler[Schema]): FieldAssemblerStringArray = new FieldAssemblerStringArray(x)
 }
 
 /**
-  * Extends FieldAssembler[R] with an optionalTsMillis() method.
+  * Extends FieldAssembler[R] with an optionalTsMillis() and optionalTsMillisSetNullIfNotParsable() methods.
   */
 private class FieldAssemblerTsMillis(assembler: FieldAssembler[Schema]) {
   private val tsMillis = LogicalTypes.timestampMillis.addToSchema(Schema.create(Schema.Type.LONG))
@@ -230,7 +239,17 @@ private class FieldAssemblerTsMillis(assembler: FieldAssembler[Schema]) {
 }
 
 /**
-  * The various field types supported by SchemaHelper.buildSchema().
+  * Extends FieldAssembler[R] with an optionalStringArray() method.
+  */
+private class FieldAssemblerStringArray(assembler: FieldAssembler[Schema]) {
+  /**
+    * An optional array of non-nullable strings.
+    */
+  def optionalStringArray(name: String): FieldAssembler[Schema] = assembler.name(name).`type`().optional().array().items().nullable().stringType()
+}
+
+/**
+  * The various field types supported by [[SchemaHelper.buildSchema]].
   */
 private sealed trait FieldType
 private case class StringFieldType() extends FieldType
@@ -242,3 +261,9 @@ private case class DoubleFieldType() extends FieldType
   * @param setNullIfNotParsable If the timestamp is not valid, set the field's value to null.
   */
 private case class TimestampFieldType(setNullIfNotParsable: Boolean = false) extends FieldType
+
+/**
+  * Array of strings. If we need to support more types, consider adding a parameter of type FieldType, however, then we
+  * need to handle the general case in [[SchemaHelper.buildSchema]].
+  */
+private case class StringArrayFieldType() extends FieldType

@@ -54,8 +54,8 @@ object PartitionCatalog {
 
   private def waitForQueryToComplete(client: AmazonAthena, res: StartQueryExecutionResult): Unit = {
     val getQueryExecutionRequest = new GetQueryExecutionRequest().withQueryExecutionId(res.getQueryExecutionId)
-
-    val sleepBetweenChecks = 500L
+    
+    val sleepBetweenChecks = 2000L
     var numChecks = 0
     while (true) {
       if ((numChecks * sleepBetweenChecks).millis > 5.minutes) {

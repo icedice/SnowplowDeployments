@@ -7,12 +7,12 @@ import java.time.format.DateTimeFormatter
 import com.amazonaws.services.athena.AmazonAthena
 import com.amazonaws.services.s3.AmazonS3
 import dk.jp.snowplow_tsv_to_parquet.athena.PartitionCatalog
-import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, TsvToAvroConverter}
+import dk.jp.snowplow_tsv_to_parquet.converters.{ContextExploder, AvroConverter}
 import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
 import dk.jp.snowplow_tsv_to_parquet.sources.TsvSource
 import dk.jp.snowplow_tsv_to_parquet.util.{S3Extension, Schemas}
-import filters.FilterRows
+import dk.jp.snowplow_tsv_to_parquet.filters.FilterRows
 import org.apache.avro.generic.GenericData
 import org.slf4j.LoggerFactory
 
@@ -83,7 +83,7 @@ object Main {
     val explodedInput = ContextExploder.explodeContexts(filteredEvents)
 
     logger.info(s"Converting events to Avro..")
-    TsvToAvroConverter.convert(explodedInput, Schemas.out)
+    AvroConverter.toAvro(explodedInput, Schemas.out)
   }
 
   private def getInputPrefix(dt: LocalDateTime): String = {

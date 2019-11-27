@@ -17,7 +17,7 @@ class AvroToParquetSink(schema: Schema) {
 
   // For each partition (such as event type), we construct a ParquetWriter. Because we don't know which partition values
   // we'll see beforehand, we'll dynamically construct the writers using newWriter the first time we see a partition
-  // value.
+  // value. This array then maps from a partition to its ParquetWriter which can be used to write a single Avro record.
   private val writers = mutable.Map[OutputPathPartitions, ParquetWriter[GenericData.Record]]()
   private def newWriter(parts: OutputPathPartitions): ParquetWriter[GenericData.Record] = {
     val pathForParts = new Path(s"/tmp/${parts.getSavePath}")
@@ -33,8 +33,13 @@ class AvroToParquetSink(schema: Schema) {
   def write(out: GenericData.Record, dt: LocalDateTime): Unit = {
     val event = out.get("event_type").asInstanceOf[String]
     val parts = OutputPathPartitions(event, dt)
+    // Find or create a new ParquetWriter for the record's partition.
     val writer = writers.getOrElseUpdate(parts, newWriter(parts))
-    writer.write(out)
+    try {
+      writer.write(out)
+    } catch {
+      case e: Throwable => ???
+    }
   }
 
   /**

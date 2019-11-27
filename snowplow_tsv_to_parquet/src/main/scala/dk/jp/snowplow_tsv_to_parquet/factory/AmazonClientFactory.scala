@@ -20,7 +20,7 @@ object AmazonClientFactory {
     AmazonAthenaClientBuilder.defaultClient()
   }
 
-  def createProdAssumeAthenaClient(assumeRoleProvider: STSAssumeRoleSessionCredentialsProvider): AmazonAthena = {
+  def createAthenaClient(assumeRoleProvider: STSAssumeRoleSessionCredentialsProvider): AmazonAthena = {
     AmazonAthenaClientBuilder.standard().withCredentials(assumeRoleProvider).build()
   }
 

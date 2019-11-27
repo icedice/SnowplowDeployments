@@ -16,16 +16,20 @@ The default settings for the Scala Compile Server in IntelliJ IDEA will result i
 
 # Adding new columns to Athena/Glue
 After adding a new column to the ContextExploder and Schemas, go to AWS Glue, select your database and table, and choose Edit Schema.
-As we're using parquet files (read by name, default), you can freely add columns anywhere in the table. The new column will push the old ones, so what used to be 124 will now be 125 in the example below.
+As we're using read by name, you can freely add columns anywhere in the table. The new column will push the old ones, so what used to be 124 will now be 125 in the example below, however, as we refer to the columns by name, you can still query for the columns that have been pushed forward.
 
 The new column will be queryable if the data exists, otherwise it won't return anything. The rest of the table will work as expected either way.
 
 You can choose to disable the tsv-to-parquet task on Airflow while updating the schema, to ensure no tasks are running while the change is going through.
 ![AWS Glue Adding Columns](readme_aws_glue_add_column.png "AWS Glue Adding Columns")
 
+## What about Terraform?
+We add columns through the AWS Console. The alternative is to run the Glue Crawler to find the new columns automatically, however, this takes a long time. The Glue Crawler is defined in Terraform so if we ever need to recreate it, we can. If we have to recreate the columns, just run the Glue Crawler.
+
+## Case sensitivity in AWS Glue
+AWS Glue only supports lowercase when defining the schema for, for example, arrays or struct type. Even though the documentation says `ARRAY<STRING>`, you should write `array<string>`. 
+
 # Backfilling using AWS Batch 
-
-
 If backfilling of snowplow-tsv-to-parquet is needed. This method has no limitations. You can backfill years with no need to manually do anything. 
 This method adds a number of jobs to a queue in AWS Batch. AWS Batch maintains a computed cluster where the jobs in the queue is run. 
 The speed of the backfilling job is based on the maximum allowed number of VCPUs allow in the computed cluster and the number of jobs.
@@ -54,6 +58,3 @@ Now you can monitor the backfilling from the AWS Batch dashboard. This keeps and
 If some of the jobs fail you can retry them from here. If multiple fail, you can remove them from the queue and run the script again.
 
 ![AWS Batch dashboard](readme_aws_batch_dashboard.png "AWS Batch dashboard")
-
-
-Dokumentation: https://aws.amazon.com/batch/

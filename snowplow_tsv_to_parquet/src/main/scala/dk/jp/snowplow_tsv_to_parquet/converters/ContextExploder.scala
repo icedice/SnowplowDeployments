@@ -11,6 +11,7 @@ private case class Pageview(site: Option[String], contentId: Option[Int], sectio
 private case class NativeAppScreenview(site: Option[String], contentId: Option[Int], sectionId: Option[Int], pageRestricted: Option[Boolean], pageRestrictedType: Option[String])
 private case class Group(authenticated: Option[Boolean], authorized: Option[Boolean], corpId: Option[String])
 private case class User(anonId: Option[String], userId: Option[String], authenticated: Option[Boolean], authorized: Option[Boolean], group: Group)
+private case class AccessAgreements(ids: Seq[String], accounts: Seq[String])
 private case class WebPage(id: Option[String])
 
 object ContextExploder {
@@ -27,8 +28,12 @@ object ContextExploder {
     val nasv = findContext(wrappers, "iglu:dk.jyllands-posten/native_app_screen_view/") map extractNativeAppScreenView getOrElse NativeAppScreenview(None, None, None, None, None)
 
     val user = findContext(wrappers, "iglu:dk.jyllands-posten/user/") map extractUser getOrElse User(None, None, None, None, Group(None, None, None))
+    // If the AA context is there, we know that it contains a list of (account, id) pairs so there's no reason to use
+    // getOrElse() here but rather let accessAgreements be an Option.
+    val accessAgreements = findContext(wrappers, "iglu:dk.jyllands-posten/access_agreements/") map extractAccessAgreements
     val webPage = findContext(wrappers, "iglu:com.snowplowanalytics.snowplow/web_page/") map extractWebPage getOrElse WebPage(None)
 
+    // The order here must match the order in SchemaHelper.additionalOutFields.
     val additionalFields: Seq[_ >: AnyRef] = Seq(
       user.anonId.orNull,
       user.userId.orNull,
@@ -47,7 +52,10 @@ object ContextExploder {
       pv.pageRestricted.orElse(nasv.pageRestricted).orNull,
       pv.pageRestrictedType.orElse(nasv.pageRestrictedType).orNull,
 
-      webPage.id.orNull
+      webPage.id.orNull,
+
+      accessAgreements.map(_.accounts.toArray).orNull,
+      accessAgreements.map(_.ids.toArray).orNull
     )
 
     event ++ additionalFields
@@ -95,6 +103,18 @@ object ContextExploder {
     val group = Group(grpAuthenticated, grpAuthorized, corpId)
 
     User(anonId, userId, userAuthenticated, userAuthorized, group)
+  }
+
+  private def extractAccessAgreements(aaCtx: JValue): AccessAgreements = {
+    val aas = (aaCtx \ "access_agreements").asInstanceOf[JArray]
+    val accountAndIdPairs = aas.arr.map { aa =>
+      val account = (aa \ "account_number").as[String]
+      val id = (aa \ "id").as[String]
+      (account, id)
+    }
+    val (accounts, ids) = accountAndIdPairs.unzip
+
+    AccessAgreements(accounts, ids)
   }
 
   private def extractWebPage(userCtx: JValue): WebPage = WebPage((userCtx \ "id").getAs[String])
