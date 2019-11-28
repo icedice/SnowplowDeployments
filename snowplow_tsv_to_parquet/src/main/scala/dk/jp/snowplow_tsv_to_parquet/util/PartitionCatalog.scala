@@ -49,9 +49,8 @@ class AthenaPartitionCatalog(partitionDatabase: String, athenaOutputLocation: St
   }
 
   private def getPartitionQuery(part: OutputPathPartitions, bucket: String): String = {
-    val location = s"s3://$bucket/${part.getRemoteSavePath}"
-    val dt = part.dt
-    f"PARTITION (event = '${part.event}', `date` = '${dt.toLocalDate.toString}', hour = ${dt.getHour}%02d) LOCATION '$location'"
+    val location = s"s3://$bucket/${part.getRemoteSaveDirectory}"
+    f"PARTITION (event = '${part.event}', `date` = '${part.dt.toLocalDate.toString}', hour = ${part.dt.getHour}%02d) LOCATION '$location'"
   }
 
   private def waitForQueryToComplete(client: AmazonAthena, res: StartQueryExecutionResult): Unit = {

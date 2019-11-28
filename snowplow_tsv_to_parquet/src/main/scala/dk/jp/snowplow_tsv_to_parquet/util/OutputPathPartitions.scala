@@ -13,12 +13,11 @@ case class OutputPathPartitions(event: String, dt: LocalDateTime) {
     s"event=$event$dtSuffix"
   }
 
-  private def getSavePathSuffix: String = {
-    val fileName = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.'pq'"))
-    s"$getSaveDirectory/$fileName"
+  private def getSaveFileName: String = {
+    dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.'pq'"))
   }
 
-  def getLocalSavePath: String = s"/tmp/snowplow_tsv_to_parquet/$getSavePathSuffix"
-
-  def getRemoteSavePath: String = s"snowplow/$getSavePathSuffix"
+  def getLocalSavePath: String = s"/tmp/snowplow_tsv_to_parquet/$getSaveDirectory/$getSaveFileName"
+  def getRemoteSaveDirectory: String = s"snowplow/$getSaveDirectory"
+  def getRemoteSavePath: String = s"$getRemoteSaveDirectory/$getSaveFileName"
 }
