@@ -14,3 +14,5 @@ target
 project/.sbtserver
 project/.sbtserver.lock
 project/project/
+
+venv/

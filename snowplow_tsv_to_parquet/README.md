@@ -30,29 +30,17 @@ We add columns through the AWS Console. The alternative is to run the Glue Crawl
 AWS Glue only supports lowercase when defining the schema for, for example, arrays or struct type. Even though the documentation says `ARRAY<STRING>`, you should write `array<string>`. 
 
 # Backfilling using AWS Batch 
-If backfilling of snowplow-tsv-to-parquet is needed. This method has no limitations. You can backfill years with no need to manually do anything. 
-This method adds a number of jobs to a queue in AWS Batch. AWS Batch maintains a computed cluster where the jobs in the queue is run. 
-The speed of the backfilling job is based on the maximum allowed number of VCPUs allow in the computed cluster and the number of jobs.
-
-To added a job to queue you need to CD to /snowplow_tsv_to_parquet/src/main/scripts/
-
-You need python and boto3 to run this scripts. Start your virtual env and install requirements.
-
-The script used to add the jobs to AWS Batch: trigger_backfill_on_aws_batch.py
+You can backfill using AWS Batch. You need `python3.6` or newer and `boto3` to run this scripts. Start your virtual env and install requirements. The script used to add the jobs to AWS Batch: `src/main/scripts/trigger_backfill_on_aws_batch.py`
 
 The script takes three parameters:
-
-```
+```bash
 python3.6 trigger_backfill_on_aws_batch.py emvironment startdate enddate
-
-ex.
-python3.6 trigger_backfill_on_aws_batch.py 'dev '2018-11-20' '2018-12-01'
-
-ex. prod
-{prod-script} terraform-prod python3.6 trigger_backfill_on_aws_batch.py 'prod' '2018-11-20' '2018-12-01'
 ```
-
-The script prints weather or not adding the jobs to AWS Batch is a success.
+ex.
+```bash
+python3.6 trigger_backfill_on_aws_batch.py dev 2018-11-20 2018-12-01
+```
+MFA is required on dev and test and the prod role must of course be assumed on prod.
 
 Now you can monitor the backfilling from the AWS Batch dashboard. This keeps and overview of the state of each job.
 If some of the jobs fail you can retry them from here. If multiple fail, you can remove them from the queue and run the script again.

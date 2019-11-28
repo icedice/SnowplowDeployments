@@ -31,10 +31,11 @@ def tsv_to_parquet(execution_date):
 
 # noinspection PyBroadException
 def add_batch_job(year, month, day, hour):
+    command = f'{year} {int(month):02d} {int(day):02d} {int(hour):02d}'
+
     try:
         batch = boto3.client('batch', region_name='eu-west-1')
 
-        command = f'{year} {int(month):02d} {int(day):02d} {int(hour):02d}'
         job_name = f'snowplow-tsv-to-parquet-{command.replace(" ","-")}'
         job_queue = f'{env_name}-snowplow-tsv-to-parquet-queue'
         job_definition = f'{env_name}-snowplow-tsv-to-parquet-definition'
@@ -49,9 +50,8 @@ def add_batch_job(year, month, day, hour):
 
         job_id = submit_job_response['jobId']
         print(f'Submitted job {job_name} {job_id} to the job queue {job_queue}')
-
     except Exception:
-        print(f"failed to add job {job_name} {job_id} to the job queue {job_queue}'")
+        print(f"Failed to add job for command '{command}' to the job queue")
         traceback.print_exc()
 
 
