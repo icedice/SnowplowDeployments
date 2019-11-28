@@ -18,7 +18,7 @@ trait ObjectStorage {
 
 class S3ObjectStorage(s3: AmazonS3) extends ObjectStorage {
 
-  private val logger = LoggerFactory.getLogger("S3Extension")
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   private def getAllKeys(bucket: String, prefix: String): Seq[String] = {
     var listObjects = s3.listObjects(bucket, prefix)
@@ -42,9 +42,10 @@ class S3ObjectStorage(s3: AmazonS3) extends ObjectStorage {
   }
 
   /**
-    * Get all objects as [[InputStream]]s from bucket's prefix. If we have files open for too long, we end up with
-    * [[java.net.SocketException]]s from the S3 SDK. Therefore, we return a iterator of iterators allowing us to only
-    * keep connections to the current 'batch' of streams open while still allowing us to process the 'batch' in parallel.
+    * Get all objects as [[java.io.InputStream]]s from bucket's prefix. If we have files open for too long, we end up 
+    * with [[java.net.SocketException]]s from the S3 SDK. Therefore, we return a iterator of iterators allowing us to
+    * only keep connections to the current 'batch' of streams open while still allowing us to process the 'batch' in 
+    * parallel.
     */
   def getContent(bucket: String, prefix: String, batchSize: Int): Iterator[Seq[InputStream]] = {
     val allKeys = getAllKeys(bucket, prefix)

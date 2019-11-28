@@ -6,13 +6,12 @@ import java.time.format.DateTimeFormatter
 
 import com.amazonaws.services.athena.AmazonAthena
 import com.amazonaws.services.s3.AmazonS3
-import dk.jp.snowplow_tsv_to_parquet.athena.{AthenaPartitionCatalog, PartitionCatalog}
 import dk.jp.snowplow_tsv_to_parquet.converters.{AvroConverter, ContextExploder}
 import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
+import dk.jp.snowplow_tsv_to_parquet.filters.FilterRows
 import dk.jp.snowplow_tsv_to_parquet.sinks.AvroToParquetSink
 import dk.jp.snowplow_tsv_to_parquet.sources.TsvSource
-import dk.jp.snowplow_tsv_to_parquet.util.{ObjectStorage, S3ObjectStorage, Schemas}
-import dk.jp.snowplow_tsv_to_parquet.filters.FilterRows
+import dk.jp.snowplow_tsv_to_parquet.util._
 import org.apache.avro.generic.GenericData
 import org.slf4j.LoggerFactory
 

@@ -114,7 +114,7 @@ object ContextExploder {
     }
     val (accounts, ids) = accountAndIdPairs.unzip
 
-    AccessAgreements(accounts, ids)
+    AccessAgreements(accounts = accounts, ids = ids)
   }
 
   private def extractWebPage(userCtx: JValue): WebPage = WebPage((userCtx \ "id").getAs[String])

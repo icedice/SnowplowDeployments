@@ -4,9 +4,8 @@ import java.time.LocalDateTime
 
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider
 import dk.jp.snowplow_tsv_to_parquet.Main.run
-import dk.jp.snowplow_tsv_to_parquet.athena.AthenaPartitionCatalog
 import dk.jp.snowplow_tsv_to_parquet.factory.AmazonClientFactory
-import dk.jp.snowplow_tsv_to_parquet.util.S3ObjectStorage
+import dk.jp.snowplow_tsv_to_parquet.util.{AthenaPartitionCatalog, S3ObjectStorage}
 import org.slf4j.LoggerFactory
 
 /**

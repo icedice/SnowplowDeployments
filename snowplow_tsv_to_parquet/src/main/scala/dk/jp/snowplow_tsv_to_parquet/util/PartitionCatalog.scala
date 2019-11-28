@@ -1,11 +1,10 @@
-package dk.jp.snowplow_tsv_to_parquet.athena
+package dk.jp.snowplow_tsv_to_parquet.util
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import com.amazonaws.services.athena.AmazonAthena
 import com.amazonaws.services.athena.model._
-import dk.jp.snowplow_tsv_to_parquet.util.OutputPathPartitions
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
