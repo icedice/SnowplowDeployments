@@ -57,9 +57,9 @@ enrich {
     # - the time in milliseconds since it was last emptied exceeds time-limit when
     #   a new event enters the buffer
     buffer {
-      byteLimit = 4096
-      recordLimit = 5
-      timeLimit = 1000
+      byteLimit = 40960
+      recordLimit = 10
+      timeLimit = 2000
     }
 
     # "app-name" is used for a DynamoDB table to maintain stream state.
