@@ -56,10 +56,13 @@ enrich {
     # - the combined size of the stored records reaches byte-limit or
     # - the time in milliseconds since it was last emptied exceeds time-limit when
     #   a new event enters the buffer
+    # We have set recordLimit and byteLimit quite high. In case of "backfilling" (e.g. due to the enricher being down
+    # for a period of time), this will make the enricher much more performant. timeLimit ensures that we don't buffer
+    # for too long during normal operations.
     buffer {
-      byteLimit = 10000000
-      recordLimit = 500
-      timeLimit = 2000
+      byteLimit = 100000000
+      recordLimit = 2500
+      timeLimit = 1000
     }
 
     # "app-name" is used for a DynamoDB table to maintain stream state.
