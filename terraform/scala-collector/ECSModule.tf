@@ -17,6 +17,8 @@ module "esc_scala_collector" {
 
   protocol = var.lb_listener_protocol
 
+  create_ecr_repository = true // same as defaut, ie. delete this
+  
   environment_variables = [
     {
       name  = "kinesisStreamBadName"
