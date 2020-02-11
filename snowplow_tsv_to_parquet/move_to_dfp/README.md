@@ -18,7 +18,7 @@ export S3_OUTPUT_PREFIX=snowplow_pageviews_dfp
 
 Run the script for a given date and hour:
 ```bash
-python3 move_to_dfp.py 2018-08-22 10
+python3 src/move_to_dfp.py 2018-08-22 10
 ```
 
 __CAUTION__: If you run the script multiple times for the same date, multiple files with duplicate data will be created so be weary of this in prod.

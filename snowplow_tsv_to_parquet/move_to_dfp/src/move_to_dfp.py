@@ -18,9 +18,9 @@ S3_OUTPUT_BUCKET = os.environ['S3_OUTPUT_BUCKET']  # 'jyllandsposten-upload-prod
 S3_OUTPUT_PREFIX = os.environ['S3_OUTPUT_PREFIX']  # 'snowplow_pageviews' on prod
 
 
-def add_dt_cols(date_to_process: date, hour_to_process: int, table: pa.Table) -> pa.Table:
+def add_dt_cols(date_to_process: date, hour_to_process: int, df: pd.DataFrame) -> None:
     def str_zfill(val: int, zfill: int):
-        return pd.Series(str(val), index=range(len(table))).str.zfill(zfill)
+        return pd.Series(str(val), index=range(len(df))).str.zfill(zfill)
 
     utc_dt = datetime.combine(date_to_process, time(hour_to_process), tzinfo=pytz.utc)
     cph_dt = utc_dt.astimezone(pytz.timezone('Europe/Copenhagen'))
@@ -32,34 +32,31 @@ def add_dt_cols(date_to_process: date, hour_to_process: int, table: pa.Table) ->
     month = str_zfill(cph_dt.month, 2)
     day = str_zfill(cph_dt.day, 2)
     hour = str_zfill(cph_dt.hour, 2)
-    dt = pd.Series(cph_dt.date().isoformat(), index=range(len(table)))
+    dt = pd.Series(cph_dt.date().isoformat(), index=range(len(df)))
 
-    # noinspection PyCallByClass,PyTypeChecker
-    return table \
-        .append_column(pa.Column.from_array('year', year)) \
-        .append_column(pa.Column.from_array('month', month)) \
-        .append_column(pa.Column.from_array('day', day)) \
-        .append_column(pa.Column.from_array('hour', hour)) \
-        .append_column(pa.Column.from_array('dt', dt))
+    df['year'] = year
+    df['month'] = month
+    df['day'] = day
+    df['hour'] = hour
+    df['dt'] = dt
 
 
-def add_brand(table: pa.Table) -> pa.Table:
-    is_jp = table.column('app_id').to_pandas().str.endswith('jyllands-posten.dk')
+def add_brand(df: pd.DataFrame) -> None:
+    is_jp = df['app_id'].str.endswith('jyllands-posten.dk')
     brand = pd.Categorical(np.where(is_jp,
                                     'jp',
                                     'erhvervsmedier'))
     # noinspection PyCallByClass,PyTypeChecker
-    return table.append_column(pa.Column.from_array('brand', brand))
+    df['brand'] = brand
 
 
-def add_page_pings_enabled_col(table: pa.Table) -> pa.Table:
+def add_page_pings_enabled_col(df: pd.DataFrame) -> None:
     # Page views with page pings enabled have the 'heartbeat' context added. The context also tells us how many seconds
     # there are between each page ping. For now, we just hard code that value to 30s but it can be extracted from the
     # heartbeat context if needed.
-    page_pings_enabled = table.column('contexts').to_pandas()\
-        .str.contains('iglu:dk.jyllands-posten/heartbeat/jsonschema/')
+    page_pings_enabled = df['contexts'].str.contains('iglu:dk.jyllands-posten/heartbeat/jsonschema/')
     # noinspection PyCallByClass,PyTypeChecker
-    return table.append_column(pa.Column.from_array('page_pings_enabled', page_pings_enabled))
+    df['page_pings_enabled'] = page_pings_enabled
 
 
 def write_dataset(df: pd.DataFrame, fs: S3FileSystem, threads: int) -> None:
@@ -79,31 +76,30 @@ def write_dataset(df: pd.DataFrame, fs: S3FileSystem, threads: int) -> None:
 
 def get_and_preprocess_pvs(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int) -> pd.DataFrame:
     logging.info(f'Reading page view data for {date_to_process.isoformat()} {hour_to_process:02d}...')
-    pvs = read_page_views(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
+    pvs: pd.DataFrame = read_page_views(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
 
     logging.info('Adding brand...')
-    pvs = add_brand(pvs)
+    add_brand(pvs)
 
     logging.info('Adding date columns for use in partitioning...')
-    pvs = add_dt_cols(date_to_process, hour_to_process, pvs)
+    add_dt_cols(date_to_process, hour_to_process, pvs)
 
     logging.info('Adding is page ping enabled column...')
-    pvs = add_page_pings_enabled_col(pvs)
+    add_page_pings_enabled_col(pvs)
 
     # The context column must be dropped before writing the output as it contains sensitive information (namely SSOid)
-    # embedded in the JSON which is somewhat difficult for the DFP to hash.
-    pvs = pvs.drop(['app_id', 'contexts'])
+    # embedded in the JSON which is somewhat difficult for the DFP to hash. The app_id column is simply not needed in
+    # DFP so we'll remove that as well.
+    pvs = pvs.drop(['app_id', 'contexts'], axis=1)
 
     # For some reason, web_page_id is not guaranteed to be unique and actually rarely is.
-    return pvs.to_pandas(use_threads=threads > 1)\
-        .drop_duplicates('web_page_id')
+    return pvs.drop_duplicates('web_page_id')
 
 
 def get_pps_per_pv(date_to_process: date, hour_to_process: int, fs: S3FileSystem, threads: int) -> pd.Series:
     logging.info(f'Reading page ping data for {date_to_process.isoformat()} {hour_to_process:02d}...')
 
-    pps_table = read_page_pings(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
-    pps = pps_table.to_pandas(use_threads=threads > 1)
+    pps: pd.DataFrame = read_page_pings(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
 
     logging.info('Finding page pings per page view...')
     pps_per_pv = pps.groupby('web_page_id').size()
@@ -118,7 +114,7 @@ def get_max_scroll_reach_values(date_to_process: date, hour_to_process: int, fs:
     """
     logging.info(f'Reading scroll reach data for {date_to_process.isoformat()} {hour_to_process:02d}...')
 
-    scroll_reach = read_scroll_reach(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
+    scroll_reach: pd.DataFrame = read_scroll_reach(S3_INPUT_BUCKET, date_to_process, hour_to_process, threads, fs)
 
     # Convert the values from string to int and return only that.
     scroll_reach['scroll_reach'] = pd.to_numeric(scroll_reach['se_value'], errors='coerce')

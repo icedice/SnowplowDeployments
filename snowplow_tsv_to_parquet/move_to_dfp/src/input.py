@@ -3,26 +3,28 @@ from datetime import date
 from typing import Set, Optional
 
 import pandas as pd
-import pyarrow as pa
 import pyarrow.parquet as pq
 from s3fs import S3FileSystem
 
 
 def read_table(s3_bucket: str, event: str, date_to_process: date, hour_to_process: int, read_nthreads: int,
-               fs: S3FileSystem, col_whitelist: Optional[Set[str]]) -> pa.Table:
+               fs: S3FileSystem, col_whitelist: Optional[Set[str]]) -> pd.DataFrame:
     in_path = f's3://{s3_bucket}/snowplow/event={event}/date={date_to_process}/hour={hour_to_process:02d}'
     logging.info(f'Reading {event} data from input path {in_path}.')
 
     try:
         ds = pq.ParquetDataset(in_path, filesystem=fs, metadata_nthreads=read_nthreads)
-        return ds.read(columns=col_whitelist)
+        df = ds.read(columns=col_whitelist).to_pandas(use_threads=read_nthreads > 1)
+        # Remove bots here because that makes it easier to remove bots from all event types.
+        is_bot = df['useragent'].str.contains('bot|crawl|spider', regex=True)
+        return df[~is_bot]
     except OSError:
         raise RuntimeError(f'Unexpected error occurred when reading {event} data.' +
                            f' Make sure the path {in_path} exists and that you have access to it.')
 
 
 def read_page_views(s3_bucket: str, date_to_process: date, hour_to_process: int, read_nthreads: int,
-                    fs: S3FileSystem) -> pa.Table:
+                    fs: S3FileSystem) -> pd.DataFrame:
     # Only keep whitelisted columns that DFP are not interested in to keep the output as simple as possible.
     col_whitelist = {'collector_tstamp', 'event_type', 'user_ipaddress', 'network_id', 'geo_country', 'geo_city',
                      'geo_region_name', 'geo_zipcode', 'page_url', 'page_title', 'page_referrer', 'page_urlscheme',
@@ -37,16 +39,16 @@ def read_page_views(s3_bucket: str, date_to_process: date, hour_to_process: int,
 
 
 def read_page_pings(s3_bucket: str, date_to_process: date, hour_to_process: int, read_nthreads: int,
-                    fs: S3FileSystem) -> pa.Table:
-    col_whitelist = {'web_page_id'}
-    return read_table(s3_bucket, 'page_ping', date_to_process, hour_to_process, read_nthreads, fs, col_whitelist)
+                    fs: S3FileSystem) -> pd.DataFrame:
+    col_whitelist = {'useragent', 'web_page_id'}
+    return read_table(s3_bucket, 'page_ping', date_to_process, hour_to_process, read_nthreads, fs, 
+                      col_whitelist)[['web_page_id']]
 
 
 def read_scroll_reach(s3_bucket: str, date_to_process: date, hour_to_process: int, read_nthreads: int,
                       fs: S3FileSystem) -> pd.DataFrame:
-    col_whitelist = {'se_category', 'se_action', 'se_value', 'web_page_id'}
-    table = read_table(s3_bucket, 'struct', date_to_process, hour_to_process, read_nthreads, fs, col_whitelist)
-    df = table.to_pandas(use_threads=read_nthreads > 1)
+    col_whitelist = {'useragent', 'se_category', 'se_action', 'se_value', 'web_page_id'}
+    df = read_table(s3_bucket, 'struct', date_to_process, hour_to_process, read_nthreads, fs, col_whitelist)
 
     filter_mask = (df['se_category'] == 'user_activity') & (df['se_action'] == 'article_scroll_reach')
     return df[filter_mask][['web_page_id', 'se_value']]
