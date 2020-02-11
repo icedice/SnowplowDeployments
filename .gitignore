@@ -1,6 +1,6 @@
 logs
 target
-/.idea
+.idea/
 /.idea_modules
 /.classpath
 /.project
@@ -14,4 +14,6 @@ target
 *.sublime-project
 *.sublime-workspace
 .temp_credentials
+.terraform/
+*venv/
 .vscode/
