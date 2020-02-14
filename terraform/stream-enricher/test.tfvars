@@ -1,10 +1,9 @@
-environment_name = "Test"
+environment = "Test"
 clustername = "Test"
 
-account = "092102721606"
+desired_ecs_task_count = 1
 
 ecs_task_memory = "400"
 ecs_task_cpu = 200
-ecs_task_count = 1
 
 no_of_shards = 1
