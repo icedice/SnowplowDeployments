@@ -1,6 +1,5 @@
 module "stream_enricher_ecs_service" {
-  //  source = "git@github.com:Jyllands-Posten/terraform-modules.git//modules/aws-modules/ecs-service?ref=nyeste_commit_hash"
-  source = "../../../terraform-modules/modules/aws-modules/ecs-service/"
+  source = "git@github.com:Jyllands-Posten/terraform-modules.git//modules/aws-modules/ecs-service?ref=ad97fca02ecd06c7d701e2b6720182e1d770ae00"
 
   ecs_cluster_arn    = var.environment
   environment        = var.environment
@@ -8,7 +7,6 @@ module "stream_enricher_ecs_service" {
   task_definition    = aws_ecs_task_definition.stream_enricher_task_definition.arn
   desired_count      = var.desired_ecs_task_count
   ecs_load_balancers = []
-//  tags               = local.tags
 }
 
 resource "aws_ecs_task_definition" "stream_enricher_task_definition" {
